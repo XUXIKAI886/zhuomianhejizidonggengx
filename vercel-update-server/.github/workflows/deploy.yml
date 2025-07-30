@@ -1,0 +1,50 @@
+name: 自动部署到 Vercel
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+    
+    - name: 设置 Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: 安装依赖
+      run: npm ci
+    
+    - name: 运行测试 (可选)
+      run: |
+        echo "运行API测试..."
+        # npm test
+    
+    - name: 部署到 Vercel
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        vercel-org-id: ${{ secrets.ORG_ID }}
+        vercel-project-id: ${{ secrets.PROJECT_ID }}
+        vercel-args: '--prod'
+        working-directory: ./
+    
+    - name: 部署成功通知
+      if: success()
+      run: |
+        echo "🎉 部署成功！"
+        echo "服务地址: https://your-app.vercel.app"
+    
+    - name: 部署失败通知  
+      if: failure()
+      run: |
+        echo "❌ 部署失败，请检查日志"

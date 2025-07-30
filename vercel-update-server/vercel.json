@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "name": "chengshang-update-server",
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/releases/(.*)",
+      "dest": "/api/releases"
+    },
+    {
+      "src": "/health",
+      "dest": "/api/health"
+    }
+  ],
+  "env": {
+    "ADMIN_TOKEN": "@admin-token",
+    "ENCRYPTION_KEY": "@encryption-key"
+  },
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 10
+    }
+  }
+}

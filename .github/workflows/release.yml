@@ -1,0 +1,86 @@
+name: 构建和发布
+
+on:
+  push:
+    tags:
+      - 'v*'  # 当推送标签时触发，如 v1.2.0
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+    
+    - name: 设置 Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: 设置 Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        target: x86_64-pc-windows-msvc
+    
+    - name: 安装依赖
+      run: npm install
+    
+    - name: 构建前端
+      run: npm run build
+    
+    - name: 构建桌面应用
+      env:
+        TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+        TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+      run: npm run tauri build
+    
+    - name: 生成版本信息
+      id: version
+      run: |
+        $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+        $bundlePath = "src-tauri/target/release/bundle/nsis/呈尚策划工具箱_${version}_x64-setup.exe"
+        echo "bundle_path=$bundlePath" >> $env:GITHUB_OUTPUT
+    
+    - name: 创建 GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ${{ steps.version.outputs.bundle_path }}
+        name: 呈尚策划工具箱 v${{ steps.version.outputs.version }}
+        body: |
+          ## 更新内容
+          - 修复了已知问题
+          - 优化了性能表现
+          - 提升了用户体验
+          
+          ## 安装说明
+          下载 exe 文件，双击安装即可。
+          
+          ## 系统要求
+          - Windows 10 或更高版本
+          - 64位系统
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 通知更新服务器
+      env:
+        ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        $body = @{
+          target = "windows-x86_64"
+          version = $env:VERSION
+          notes = "自动化构建版本 v$env:VERSION"
+          signature = "GENERATED_SIGNATURE"
+          url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/v$env:VERSION/呈尚策划工具箱_${env:VERSION}_x64-setup.exe"
+        } | ConvertTo-Json
+        
+        Invoke-RestMethod -Uri "https://api.chengshangcehua.com/api/admin/releases" `
+          -Method POST `
+          -Headers @{"Authorization"="Bearer $env:ADMIN_TOKEN"; "Content-Type"="application/json"} `
+          -Body $body

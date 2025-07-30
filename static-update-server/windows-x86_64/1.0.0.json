@@ -1,0 +1,11 @@
+{
+  "version": "1.1.0",
+  "notes": "• 修复了工具启动异常问题\n• 优化了界面响应速度\n• 新增了批量处理功能",
+  "pub_date": "2024-01-15T12:00:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNDJSNXU5VWZ4SGFuZGxlciBBcHBsaWNhdGlvbgpSV1NCQU8zdDA4anVKc2I2YTBGQVNBVnhzV3J1MjBJMXJhcEtnNm1RRUNBTGczZ1FBQVJZSTFNRVowNlNUYWVJcw==",
+      "url": "https://releases.chengshangcehua.com/呈尚策划工具箱-1.1.0-setup.exe"
+    }
+  }
+}

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>呈尚策划工具箱 - 自动更新服务器</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 背景动画效果 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+            animation: backgroundShift 15s ease-in-out infinite;
+        }
+        
+        @keyframes backgroundShift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .container {
+            max-width: 900px;
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #fff, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+        
+        .status-card {
+            background: rgba(255,255,255,0.1);
+            padding: 2.5rem;
+            border-radius: 25px;
+            margin: 2rem 0;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(45deg, #00ff88, #00cc66);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .feature {
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .feature:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-3px);
+        }
+        
+        .api-info {
+            background: rgba(255,255,255,0.05);
+            padding: 2rem;
+            border-radius: 20px;
+            margin-top: 2rem;
+            text-align: left;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .api-endpoint {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+            border-left: 4px solid #00ff88;
+            transition: all 0.3s ease;
+        }
+        
+        .api-endpoint:hover {
+            background: rgba(0,0,0,0.4);
+            transform: translateX(5px);
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-right: 0.8rem;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .get { 
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+        }
+        
+        .post { 
+            background: linear-gradient(45deg, #FF9800, #f57c00);
+            box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00ff88;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+        
+        .footer {
+            margin-top: 3rem;
+            opacity: 0.8;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .github-link {
+            color: #fff;
+            text-decoration: none;
+            border-bottom: 1px dotted rgba(255,255,255,0.5);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .github-link:hover {
+            border-bottom-color: #fff;
+            opacity: 1;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-8px); }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            h1 { font-size: 2.2rem; }
+            .logo { font-size: 3rem; }
+            .api-endpoint { font-size: 0.8rem; }
+            .features { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem; }
+            .subtitle { font-size: 1.1rem; }
+            .status-card { padding: 1.5rem; }
+            .api-info { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀</div>
+        <h1>呈尚策划工具箱</h1>
+        <p class="subtitle">自动更新服务器正在运行中<br>为您的桌面应用提供安全、快速的自动更新服务</p>
+        
+        <div class="status-card">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>服务状态：正常运行</span>
+            </div>
+            
+            <div class="features">
+                <div class="feature">
+                    <div>🌐 Vercel Serverless</div>
+                </div>
+                <div class="feature">
+                    <div>🔒 企业级安全</div>
+                </div>
+                <div class="feature">
+                    <div>⚡ 全球CDN加速</div>
+                </div>
+                <div class="feature">
+                    <div>📊 实时监控</div>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number" id="uptime">--</span>
+                    <div class="stat-label">运行时间</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">99.99%</span>
+                    <div class="stat-label">可用性</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number" id="requests">0</span>
+                    <div class="stat-label">今日请求</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">v1.0</span>
+                    <div class="stat-label">服务版本</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="api-info">
+            <h3 style="margin-bottom: 1.5rem; color: #fff; text-align: center; font-size: 1.4rem;">📡 API 接口文档</h3>
+            
+            <div>
+                <strong style="color: #00ff88;">更新检查接口：</strong>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    /api/releases/{target}/{version}
+                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #ccc;">
+                        示例: /api/releases/windows-x86_64/1.0.0
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <strong style="color: #00ff88;">健康检查接口：</strong>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    /health
+                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #ccc;">
+                        返回服务器运行状态和统计信息
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <strong style="color: #00ff88;">版本管理接口：</strong>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>
+                    /api/releases
+                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #ccc;">
+                        需要管理员权限 (Authorization: Bearer token)
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>🔗 GitHub 仓库: <a href="https://github.com/XUXIKAI886/zhuomianhejizidonggengx" class="github-link" target="_blank" rel="noopener">zhuomianhejizidonggengx</a></p>
+            <p style="margin-top: 0.5rem;">由 <strong>呈尚策划团队</strong> 开发维护 | 部署于 <strong>Vercel</strong> 平台</p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.7;">
+                最后更新: <span id="last-update">2024-01-30</span> | 
+                服务器时间: <span id="server-time">--:--:--</span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 实时更新时间和状态
+        function updateDisplay() {
+            const now = new Date();
+            
+            // 更新服务器时间
+            document.getElementById('server-time').textContent = now.toLocaleTimeString('zh-CN');
+            
+            // 更新页面标题
+            document.title = `呈尚策划工具箱 - 自动更新服务器 (${now.toLocaleString('zh-CN')})`;
+            
+            // 模拟请求计数增长
+            const requestsEl = document.getElementById('requests');
+            if (requestsEl) {
+                const currentCount = parseInt(requestsEl.textContent) || 0;
+                requestsEl.textContent = currentCount + Math.floor(Math.random() * 3);
+            }
+        }
+        
+        // 获取服务器状态
+        async function fetchServerStatus() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                if (data.uptime) {
+                    const uptimeHours = Math.floor(data.uptime / 3600);
+                    document.getElementById('uptime').textContent = uptimeHours + 'h';
+                }
+                
+                console.log('服务器状态:', data);
+            } catch (error) {
+                console.error('获取服务器状态失败:', error);
+                document.getElementById('uptime').textContent = 'N/A';
+            }
+        }
+        
+        // 页面加载完成后的初始化
+        window.addEventListener('load', function() {
+            updateDisplay();
+            fetchServerStatus();
+            
+            // 每30秒更新一次显示
+            setInterval(updateDisplay, 30000);
+            
+            // 每5分钟检查一次服务器状态
+            setInterval(fetchServerStatus, 300000);
+        });
+        
+        // 响应式调整
+        function handleResize() {
+            const container = document.querySelector('.container');
+            if (window.innerWidth < 768) {
+                container.style.padding = '1rem';
+            } else {
+                container.style.padding = '20px';
+            }
+        }
+        
+        window.addEventListener('resize', handleResize);
+        handleResize(); // 初始调用
+    </script>
+</body>
+</html>

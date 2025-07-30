@@ -1,0 +1,32 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="avatarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4F46E5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="faceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FEF3C7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FDE68A;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="50" fill="url(#avatarGradient)"/>
+  
+  <!-- Face -->
+  <circle cx="50" cy="40" r="18" fill="url(#faceGradient)" stroke="#E5E7EB" stroke-width="1"/>
+  
+  <!-- Eyes -->
+  <circle cx="44" cy="36" r="2" fill="#374151"/>
+  <circle cx="56" cy="36" r="2" fill="#374151"/>
+  
+  <!-- Smile -->
+  <path d="M 42 42 Q 50 48 58 42" stroke="#374151" stroke-width="2" fill="none" stroke-linecap="round"/>
+  
+  <!-- Body -->
+  <ellipse cx="50" cy="75" rx="22" ry="15" fill="#6B7280"/>
+  
+  <!-- Shirt -->
+  <path d="M 28 65 Q 50 60 72 65 L 72 85 Q 50 80 28 85 Z" fill="#3B82F6"/>
+</svg>

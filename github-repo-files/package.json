@@ -1,0 +1,25 @@
+{
+  "name": "chengshang-update-server",
+  "version": "1.0.0",
+  "description": "呈尚策划工具箱 Vercel 自动更新服务器",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "semver": "^7.5.4"
+  },
+  "devDependencies": {
+    "vercel": "^32.7.2"
+  },
+  "keywords": ["tauri", "updater", "vercel", "serverless", "chengshang"],
+  "author": "XUXIKAI886",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/XUXIKAI886/zhuomianhejizidonggengx.git"
+  },
+  "homepage": "https://github.com/XUXIKAI886/zhuomianhejizidonggengx"
+}
