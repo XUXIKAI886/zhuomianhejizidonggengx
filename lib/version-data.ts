@@ -23,6 +23,22 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.3",
+    date: "2025-07-30",
+    type: "patch",
+    title: "🏷️ 产品名称标准化",
+    description: "将产品名称从 'ccsh' 标准化为 'csch'（呈尚策划），提供更清晰的品牌标识和更好的用户识别度。",
+    features: [
+      { icon: "sparkles", text: "产品名称标准化为 'csch'（呈尚策划）", highlight: true },
+      { icon: "settings", text: "安装包文件名更新为 'csch_x.x.x_x64-setup.exe'" },
+      { icon: "shield", text: "保持英文文件名，确保GitHub兼容性" },
+      { icon: "users", text: "提升品牌识别度和用户体验" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.3",
+    releaseNotes: "这个版本主要是产品名称的标准化更新，提升品牌一致性。"
+  },
+  {
     version: "1.0.2",
     date: "2025-07-30",
     type: "patch",
@@ -34,7 +50,6 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "zap", text: "提升安装包下载的稳定性和兼容性" },
       { icon: "file", text: "优化自动更新系统的文件识别机制" }
     ],
-    isNew: true,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.2",
     releaseNotes: "这是一个重要的修复版本，解决了安装包文件名的兼容性问题。"
   },
