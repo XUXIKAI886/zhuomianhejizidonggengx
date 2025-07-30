@@ -1,30 +1,16 @@
 {
   "version": 2,
   "name": "chengshang-update-server",
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/releases/(.*)",
-      "dest": "/api/releases"
+      "source": "/api/releases/(.*)",
+      "destination": "/api/releases"
     },
     {
-      "src": "/health",
-      "dest": "/api/health"
-    },
-    {
-      "src": "/",
-      "dest": "/index.html"
+      "source": "/health",
+      "destination": "/api/health"
     }
   ],
-  "env": {
-    "ADMIN_TOKEN": "@admin-token",
-    "ENCRYPTION_KEY": "@encryption-key"
-  },
   "functions": {
     "api/**/*.js": {
       "maxDuration": 10
