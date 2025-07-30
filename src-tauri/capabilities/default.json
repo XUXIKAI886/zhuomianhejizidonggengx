@@ -21,6 +21,9 @@
     "core:app:allow-app-show",
     "core:app:allow-app-hide",
     "shell:default",
-    "shell:allow-open"
+    "shell:allow-open",
+    "updater:default",
+    "updater:allow-check",
+    "updater:allow-download-and-install"
   ]
 }

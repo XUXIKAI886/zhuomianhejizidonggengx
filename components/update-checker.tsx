@@ -23,12 +23,28 @@ export function UpdateChecker() {
   const [isChecking, setIsChecking] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
 
+  // 检查是否在Tauri环境中
+  const isTauriApp = () => {
+    return typeof window !== 'undefined' && window.__TAURI__ !== undefined
+  }
+
   // 检查更新
   const checkForUpdates = async (showToast = true) => {
+    // 检查是否在Tauri环境中
+    if (!isTauriApp()) {
+      if (showToast) {
+        toast.info('更新功能仅在桌面应用中可用', {
+          description: '请下载桌面版本以使用自动更新功能',
+          icon: <AlertCircle className="h-4 w-4" />
+        })
+      }
+      return
+    }
+
     try {
       setIsChecking(true)
       const update = await check()
-      
+
       if (update?.available) {
         setUpdateInfo({
           version: update.version,
@@ -37,7 +53,7 @@ export function UpdateChecker() {
         })
         setUpdateAvailable(true)
         setShowDialog(true)
-        
+
         if (showToast) {
           toast.success(`发现新版本 v${update.version}`, {
             description: '点击查看更新详情',
@@ -57,9 +73,22 @@ export function UpdateChecker() {
       }
     } catch (error) {
       console.error('检查更新失败:', error)
+
+      // 更详细的错误处理
+      let errorMessage = '请检查网络连接后重试'
+      const errorStr = String(error)
+
+      if (errorStr.includes('not allowed') || errorStr.includes('Permissions')) {
+        errorMessage = '更新权限不足，请重启应用后重试'
+      } else if (errorStr.includes('network') || errorStr.includes('fetch')) {
+        errorMessage = '网络连接失败，请检查网络设置'
+      } else if (errorStr.includes('timeout')) {
+        errorMessage = '连接超时，请稍后重试'
+      }
+
       if (showToast) {
         toast.error('检查更新失败', {
-          description: '请检查网络连接后重试',
+          description: errorMessage,
           icon: <AlertCircle className="h-4 w-4" />
         })
       }
@@ -124,6 +153,11 @@ export function UpdateChecker() {
 
   // 应用启动时自动检查更新
   useEffect(() => {
+    // 只在Tauri环境中自动检查更新
+    if (!isTauriApp()) {
+      return
+    }
+
     // 延迟3秒后自动检查更新，避免影响应用启动
     const timer = setTimeout(() => {
       checkForUpdates(false)

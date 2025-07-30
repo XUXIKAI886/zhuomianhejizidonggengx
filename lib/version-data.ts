@@ -23,6 +23,22 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.2",
+    date: "2025-07-30",
+    type: "patch",
+    title: "🔧 安装包文件名优化",
+    description: "修复GitHub Release中文文件名被过滤的问题，将安装包名称改为英文，确保上传和下载的稳定性。",
+    features: [
+      { icon: "settings", text: "安装包文件名改为英文 'ccsh'，避免中文字符问题", highlight: true },
+      { icon: "shield", text: "修复GitHub Release文件名被过滤的问题" },
+      { icon: "zap", text: "提升安装包下载的稳定性和兼容性" },
+      { icon: "file", text: "优化自动更新系统的文件识别机制" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.2",
+    releaseNotes: "这是一个重要的修复版本，解决了安装包文件名的兼容性问题。"
+  },
+  {
     version: "1.0.1",
     date: "2025-07-30",
     type: "minor",
@@ -37,7 +53,6 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "file", text: "版本统计信息和服务器状态显示" },
       { icon: "shield", text: "本地存储记忆用户阅读状态" }
     ],
-    isNew: true,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.1",
     releaseNotes: "这个版本专注于提升用户体验，让用户能够方便地了解每个版本的更新内容。"
   },
