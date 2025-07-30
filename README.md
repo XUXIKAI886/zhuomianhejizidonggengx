@@ -25,6 +25,7 @@
 - 🔒 **企业级安全保护** - 多层次开发者工具保护，防止代码泄露和误操作
 - 📊 **智能分类管理** - 按岗位智能分类，快速定位所需工具
 - 💻 **跨平台支持** - 支持Windows、macOS、Linux多平台部署
+- 🔄 **自动更新系统** - 企业级自动更新服务，零成本全球CDN加速
 
 ## 🏗️ 技术架构
 
@@ -42,6 +43,12 @@
 - **Tauri 2.x** - 现代化桌面应用框架
 - **Rust** - 高性能系统编程语言，处理后端逻辑
 - **WebView2** - 现代化Web视图渲染引擎
+
+### 自动更新系统
+- **Vercel Serverless** - 零成本更新服务器托管
+- **GitHub Releases** - 安装包存储和版本管理
+- **数字签名验证** - RSA+SHA256安全验证机制
+- **全球CDN加速** - Vercel Edge Network全球节点
 
 ### 开发工具
 - **ESLint** - 代码质量检查
@@ -76,6 +83,8 @@
 - **主题支持** - 亮色主题，未来支持暗色模式
 - **错误处理** - 智能错误检测和重试机制
 - **Toast通知** - 友好的用户反馈机制
+- **自动更新** - 应用启动时自动检查更新，支持一键升级
+- **版本通知** - 智能版本更新通知系统，详细展示更新历史
 
 #### 🔄 开发中功能
 - **系统托盘集成** - 最小化到系统托盘，快速呼出
@@ -83,7 +92,103 @@
 - **快捷键支持** - 全局快捷键和工具快速启动
 - **个性化设置** - 用户偏好设置和工具自定义排序
 
-## 🛠️ 安装和使用
+## 🔄 自动更新系统
+
+### 系统架构
+
+```
+桌面应用 ←→ 更新服务器 ←→ GitHub Releases
+   ↓           ↓              ↓
+版本检查    API处理验证    安装包存储
+```
+
+### 核心特性
+
+- ✅ **零成本运行** - Vercel免费托管，无服务器维护成本
+- ✅ **全球CDN加速** - Vercel Edge Network，全球100+节点
+- ✅ **企业级安全** - Bearer Token认证 + RSA数字签名验证
+- ✅ **自动检查更新** - 应用启动时自动检查，用户友好的更新提示
+- ✅ **一键升级** - 自动下载安装包，支持后台更新
+- ✅ **版本管理** - 完整的版本发布和回滚机制
+
+### 更新服务器
+
+**服务地址**: https://zhuomianhejizidonggengx.vercel.app
+
+**API端点**:
+- `GET /health` - 服务健康检查
+- `GET /api/releases/{target}/{version}` - 检查更新
+- `POST /api/releases` - 发布新版本（需管理员权限）
+
+### 使用流程
+
+1. **自动检查**: 应用启动时自动检查更新
+2. **版本比较**: 服务器比较当前版本与最新版本
+3. **更新提示**: 发现新版本时显示更新对话框
+4. **安全下载**: 从GitHub Releases下载并验证数字签名
+5. **自动安装**: 用户确认后自动安装新版本
+
+### 技术实现
+
+**客户端配置** (`src-tauri/tauri.conf.json`):
+```json
+{
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://zhuomianhejizidonggengx.vercel.app/api/releases/{{target}}/{{current_version}}"
+      ],
+      "dialog": true,
+      "pubkey": "数字签名公钥"
+    }
+  }
+}
+```
+
+**版本发布流程**:
+1. 构建新版本: `npm run tauri:build`
+2. 创建Git标签: `git tag v1.1.0 && git push origin v1.1.0`
+3. 发布GitHub Release并上传安装包
+4. 更新服务器版本信息
+
+详细部署指南请参考: [自动更新系统部署完整指南.md](./自动更新系统部署完整指南.md)
+
+## � 版本通知系统
+
+### 智能通知功能
+
+应用头部的铃铛图标提供了完整的版本更新通知功能：
+
+- **📊 未读计数**: 显示未读版本更新数量，红色数字标识
+- **📋 版本历史**: 完整的版本更新历史记录
+- **🏷️ 分类标签**: 重大更新、功能更新、修复更新分类显示
+- **🔍 详情展开**: 支持展开查看完整功能列表
+- **⚡ 快速操作**: 一键标记已读、查看最新版本
+
+### 版本分类系统
+
+| 类型 | 标签颜色 | 说明 |
+|------|----------|------|
+| **重大更新** | 紫色渐变 | 重要功能、架构变更 |
+| **功能更新** | 蓝色渐变 | 新增功能、改进优化 |
+| **修复更新** | 绿色渐变 | Bug修复、稳定性提升 |
+
+### 特殊标记
+
+- 🛡️ **安全更新**: 包含安全修复的版本
+- ⚠️ **重大变更**: 可能影响现有功能的更新
+- 🆕 **最新版本**: 最近发布的版本标识
+
+### 使用方法
+
+1. **查看通知**: 点击头部铃铛图标打开版本通知面板
+2. **浏览历史**: 滚动查看所有版本更新记录
+3. **展开详情**: 点击"查看全部功能"展开完整特性列表
+4. **快速操作**: 使用底部快速操作按钮管理通知状态
+
+详细使用指南请参考: [版本通知功能使用指南.md](./文档/版本通知功能使用指南.md)
+
+## �🛠️ 安装和使用
 
 ### 环境要求
 
@@ -713,6 +818,7 @@ if %errorlevel% equ 0 (
 - ✅ 企业级安全保护机制
 - ✅ WebView工具启动系统
 - ✅ 智能分类筛选功能
+- ✅ 企业级自动更新系统 (2025年7月30日部署)
 
 #### v1.1.0 (计划中)
 - 🔄 系统托盘集成
@@ -763,7 +869,7 @@ if %errorlevel% equ 0 (
 - **安装包大小**: 20-35MB
 - **工具响应时间**: < 1秒
 - **网络依赖**: 仅工具访问时需要
-- **自动更新**: ✅ 支持（需配置更新服务器）
+- **自动更新**: ✅ 已部署企业级更新服务器
 
 ## 📄 许可证
 
@@ -806,9 +912,10 @@ SOFTWARE.
 
 ## 📞 联系我们
 
-- **项目主页**: [GitHub Repository](https://github.com/your-username/chengsangcehua-toolbox)
-- **问题反馈**: [Issues](https://github.com/your-username/chengsangcehua-toolbox/issues)
-- **功能建议**: [Discussions](https://github.com/your-username/chengsangcehua-toolbox/discussions)
+- **项目主页**: [GitHub Repository](https://github.com/XUXIKAI886/zhuomianhejizidonggengx)
+- **问题反馈**: [Issues](https://github.com/XUXIKAI886/zhuomianhejizidonggengx/issues)
+- **功能建议**: [Discussions](https://github.com/XUXIKAI886/zhuomianhejizidonggengx/discussions)
+- **更新服务器**: [https://zhuomianhejizidonggengx.vercel.app](https://zhuomianhejizidonggengx.vercel.app)
 - **技术支持**: [support@chengshangcehua.com](mailto:support@chengshangcehua.com)
 
 ---
