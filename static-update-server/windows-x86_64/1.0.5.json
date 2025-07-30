@@ -1,0 +1,11 @@
+{
+  "version": "1.0.5",
+  "notes": "• 更新检测机制优化\n• 优化Tauri环境检测逻辑\n• 增强错误处理和详细诊断日志\n• 改进用户体验和状态反馈",
+  "pub_date": "2025-07-30T09:00:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNDJSNXU5VWZ4SGFuZGxlciBBcHBsaWNhdGlvbgpSV1NCQU8zdDA4anVKc2I2YTBGQVNBVnhzV3J1MjBJMXJhcEtnNm1RRUNBTGczZ1FBQVJZSTFNRVowNlNUYWVJcw==",
+      "url": "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v1.0.5/csch_1.0.5_x64-setup.exe"
+    }
+  }
+}

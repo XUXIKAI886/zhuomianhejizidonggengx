@@ -23,6 +23,22 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.7",
+    date: "2025-07-30",
+    type: "patch",
+    title: "🔧 调试版本 - 启用开发者工具",
+    description: "临时启用开发者工具，便于排查自动更新问题。包含完整的日志输出和调试功能。",
+    features: [
+      { icon: "settings", text: "启用开发者工具，支持F12打开控制台", highlight: true },
+      { icon: "zap", text: "增强调试日志输出，便于问题排查" },
+      { icon: "shield", text: "保持所有更新功能和环境检测逻辑" },
+      { icon: "users", text: "临时调试版本，用于问题诊断" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.7",
+    releaseNotes: "这是一个临时调试版本，启用了开发者工具以便排查更新问题。"
+  },
+  {
     version: "1.0.6",
     date: "2025-07-30",
     type: "minor",
@@ -34,7 +50,6 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "settings", text: "简化Tauri环境检测逻辑，提高兼容性" },
       { icon: "shield", text: "优化更新检查机制，减少误报" }
     ],
-    isNew: true,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.6",
     releaseNotes: "这个版本主要优化了更新服务器的访问体验，特别是国内用户。"
   },

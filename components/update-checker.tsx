@@ -23,58 +23,51 @@ export function UpdateChecker() {
   const [isChecking, setIsChecking] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
 
-  // 检查是否在Tauri环境中
-  const isTauriApp = () => {
-    // 多种方式检测Tauri环境
-    const hasTauriGlobal = typeof window !== 'undefined' && window.__TAURI__ !== undefined
-    const hasTauriUserAgent = navigator?.userAgent?.includes('Tauri') || false
-    const hasTauriInvoke = typeof window !== 'undefined' && typeof window.__TAURI_INVOKE__ === 'function'
-    const isElectron = navigator?.userAgent?.includes('Electron') || false
-
-    // 如果是Electron或明确的浏览器环境，返回false
-    if (isElectron || window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-      // 但如果UserAgent包含Tauri，说明是Tauri应用
-      if (hasTauriUserAgent) {
-        console.log('Tauri环境检测: 通过UserAgent检测到Tauri')
+  // 检查更新
+  const checkForUpdates = async (showToast = true) => {
+    // ✅ 修复后的Tauri环境检测逻辑
+    const isTauriEnvironment = () => {
+      // 方法1: 检查Tauri全局对象
+      if (typeof window !== 'undefined' && window.__TAURI__) {
+        console.log('Tauri环境检测: 通过__TAURI__全局对象检测成功')
         return true
       }
-      console.log('Tauri环境检测: 检测到浏览器环境')
+      
+      // 方法2: 检查Tauri相关API函数
+      if (typeof window !== 'undefined' && typeof window.__TAURI_INVOKE__ === 'function') {
+        console.log('Tauri环境检测: 通过__TAURI_INVOKE__函数检测成功')
+        return true
+      }
+      
+      // 方法3: 检查UserAgent中的Tauri标识
+      if (navigator?.userAgent?.includes('Tauri')) {
+        console.log('Tauri环境检测: 通过UserAgent检测成功')
+        return true
+      }
+      
+      // 方法4: 检查是否为桌面应用特有的协议
+      if (window.location.protocol === 'tauri:') {
+        console.log('Tauri环境检测: 通过tauri://协议检测成功')
+        return true
+      }
+      
+      console.log('Tauri环境检测: 所有检测方法均未通过，判定为非Tauri环境')
       return false
     }
 
-    const isInTauri = hasTauriGlobal || hasTauriUserAgent || hasTauriInvoke
-
-    console.log('Tauri环境检测:', {
-      window: typeof window,
-      __TAURI__: typeof window?.__TAURI__,
-      __TAURI_INVOKE__: typeof window?.__TAURI_INVOKE__,
-      userAgent: navigator?.userAgent,
-      protocol: window.location.protocol,
-      hasTauriGlobal,
-      hasTauriUserAgent,
-      hasTauriInvoke,
-      isElectron,
-      finalResult: isInTauri
-    })
-
-    return isInTauri
-  }
-
-  // 检查更新
-  const checkForUpdates = async (showToast = true) => {
-    // 简化检测：只检查是否为明确的浏览器环境
-    const isWebBrowser = window.location.protocol === 'http:' || window.location.protocol === 'https:'
+    const isInTauri = isTauriEnvironment()
 
     console.log('更新检查环境信息:', {
       protocol: window.location.protocol,
       href: window.location.href,
       userAgent: navigator.userAgent,
-      isWebBrowser,
-      __TAURI__: !!window.__TAURI__
+      __TAURI__: !!window.__TAURI__,
+      __TAURI_INVOKE__: typeof window.__TAURI_INVOKE__,
+      isInTauri
     })
 
-    if (isWebBrowser) {
-      console.log('检测到浏览器环境，跳过更新检查')
+    if (!isInTauri) {
+      console.log('检测到非Tauri环境，跳过更新检查')
       if (showToast) {
         toast.info('更新功能仅在桌面应用中可用', {
           description: '请下载桌面版本以使用自动更新功能',
@@ -84,8 +77,8 @@ export function UpdateChecker() {
       return
     }
 
-    // 在桌面环境中，直接尝试更新检查
-    console.log('桌面环境检测成功，开始更新检查')
+    // 在Tauri桌面环境中，开始更新检查
+    console.log('Tauri桌面环境检测成功，开始更新检查')
 
     try {
       setIsChecking(true)
@@ -219,8 +212,33 @@ export function UpdateChecker() {
 
   // 应用启动时自动检查更新
   useEffect(() => {
+    // 使用与checkForUpdates相同的环境检测逻辑
+    const isTauriEnvironment = () => {
+      // 方法1: 检查Tauri全局对象
+      if (typeof window !== 'undefined' && window.__TAURI__) {
+        return true
+      }
+      
+      // 方法2: 检查Tauri相关API函数
+      if (typeof window !== 'undefined' && typeof window.__TAURI_INVOKE__ === 'function') {
+        return true
+      }
+      
+      // 方法3: 检查UserAgent中的Tauri标识
+      if (navigator?.userAgent?.includes('Tauri')) {
+        return true
+      }
+      
+      // 方法4: 检查是否为桌面应用特有的协议
+      if (window.location.protocol === 'tauri:') {
+        return true
+      }
+      
+      return false
+    }
+
     // 只在Tauri环境中自动检查更新
-    if (!isTauriApp()) {
+    if (!isTauriEnvironment()) {
       console.log('UpdateChecker: 非Tauri环境，跳过自动更新检查')
       return
     }

@@ -4,6 +4,20 @@ const semver = require('semver');
 const releases = {
   'windows-x86_64': [
     {
+      version: '1.0.6',
+      notes: '• 更新服务器域名优化\n• 提升国内用户访问稳定性\n• 简化Tauri环境检测逻辑\n• 优化更新检查机制，减少误报',
+      pub_date: '2025-07-30T10:00:00Z',
+      signature: 'dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNDJSNXU5VWZ4SGFuZGxlciBBcHBsaWNhdGlvbgpSV1NCQU8zdDA4anVKc2I2YTBGQVNBVnhzV3J1MjBJMXJhcEtnNm1RRUNBTGczZ1FBQVJZSTFNRVowNlNUYWVJcw==',
+      url: 'https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v1.0.6/csch_1.0.6_x64-setup.exe'
+    },
+    {
+      version: '1.0.5',
+      notes: '• 更新检测机制优化\n• 优化Tauri环境检测逻辑\n• 增强错误处理和详细诊断日志\n• 改进用户体验和状态反馈',
+      pub_date: '2025-07-30T09:00:00Z',
+      signature: 'dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNDJSNXU5VWZ4SGFuZGxlciBBcHBsaWNhdGlvbgpSV1NCQU8zdDA4anVKc2I2YTBGQVNBVnhzV3J1MjBJMXJhcEtnNm1RRUNBTGczZ1FBQVJZSTFNRVowNlNUYWVJcw==',
+      url: 'https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v1.0.5/csch_1.0.5_x64-setup.exe'
+    },
+    {
       version: '1.0.0',
       notes: '• 初始版本发布\n• 19个专业工具集成\n• 企业级安全保护\n• 完整的自动更新系统',
       pub_date: '2024-01-30T10:00:00Z',
