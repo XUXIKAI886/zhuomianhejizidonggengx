@@ -325,7 +325,7 @@ export function VersionNotifications() {
               variant="ghost"
               size="sm"
               className="text-xs h-7 px-3 hover:bg-gray-100 dark:hover:bg-gray-700"
-              onClick={() => window.open('https://zhuomianhejizidonggengx.vercel.app', '_blank')}
+              onClick={() => window.open('https://www.yujinkeji.asia', '_blank')}
             >
               <ExternalLink className="w-3 h-3 mr-1" />
               更新服务器

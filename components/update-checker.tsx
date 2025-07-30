@@ -62,26 +62,30 @@ export function UpdateChecker() {
 
   // 检查更新
   const checkForUpdates = async (showToast = true) => {
-    // 检查是否在Tauri环境中
-    const tauriDetected = isTauriApp()
-    if (!tauriDetected) {
-      // 如果检测失败，但我们在桌面应用中，仍然尝试调用更新API
-      console.log('Tauri环境检测失败，但仍尝试调用更新API')
+    // 简化检测：只检查是否为明确的浏览器环境
+    const isWebBrowser = window.location.protocol === 'http:' || window.location.protocol === 'https:'
 
-      // 如果是明确的浏览器环境（有http/https协议），则跳过
-      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-        if (showToast) {
-          toast.info('更新功能仅在桌面应用中可用', {
-            description: '请下载桌面版本以使用自动更新功能',
-            icon: <AlertCircle className="h-4 w-4" />
-          })
-        }
-        return
+    console.log('更新检查环境信息:', {
+      protocol: window.location.protocol,
+      href: window.location.href,
+      userAgent: navigator.userAgent,
+      isWebBrowser,
+      __TAURI__: !!window.__TAURI__
+    })
+
+    if (isWebBrowser) {
+      console.log('检测到浏览器环境，跳过更新检查')
+      if (showToast) {
+        toast.info('更新功能仅在桌面应用中可用', {
+          description: '请下载桌面版本以使用自动更新功能',
+          icon: <AlertCircle className="h-4 w-4" />
+        })
       }
-
-      // 否则继续尝试更新检查
-      console.log('非HTTP环境，继续尝试更新检查')
+      return
     }
+
+    // 在桌面环境中，直接尝试更新检查
+    console.log('桌面环境检测成功，开始更新检查')
 
     try {
       setIsChecking(true)

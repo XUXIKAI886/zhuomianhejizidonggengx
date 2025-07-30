@@ -23,6 +23,22 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.6",
+    date: "2025-07-30",
+    type: "minor",
+    title: "🌐 更新服务器域名优化",
+    description: "将更新服务器迁移到自定义域名 www.yujinkeji.asia，提升国内用户访问稳定性，同时简化环境检测逻辑。",
+    features: [
+      { icon: "globe", text: "更新服务器迁移到自定义域名 www.yujinkeji.asia", highlight: true },
+      { icon: "zap", text: "提升国内用户访问稳定性和速度" },
+      { icon: "settings", text: "简化Tauri环境检测逻辑，提高兼容性" },
+      { icon: "shield", text: "优化更新检查机制，减少误报" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.6",
+    releaseNotes: "这个版本主要优化了更新服务器的访问体验，特别是国内用户。"
+  },
+  {
     version: "1.0.5",
     date: "2025-07-30",
     type: "patch",
@@ -34,7 +50,6 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "settings", text: "增强错误处理和详细的诊断日志" },
       { icon: "users", text: "改进用户体验，提供更准确的状态反馈" }
     ],
-    isNew: true,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.5",
     releaseNotes: "这个版本彻底解决了自动更新功能的环境检测问题。"
   },
