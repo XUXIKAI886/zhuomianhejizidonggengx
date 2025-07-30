@@ -23,6 +23,37 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.5",
+    date: "2025-07-30",
+    type: "patch",
+    title: "🛠️ 更新检测机制优化",
+    description: "彻底修复桌面应用中的自动更新检测问题，优化Tauri环境检测逻辑，确保在所有桌面环境中都能正常工作。",
+    features: [
+      { icon: "zap", text: "优化Tauri环境检测逻辑，支持多种检测方式", highlight: true },
+      { icon: "shield", text: "跳过环境检测失败，直接尝试更新API调用" },
+      { icon: "settings", text: "增强错误处理和详细的诊断日志" },
+      { icon: "users", text: "改进用户体验，提供更准确的状态反馈" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.5",
+    releaseNotes: "这个版本彻底解决了自动更新功能的环境检测问题。"
+  },
+  {
+    version: "1.0.4",
+    date: "2025-07-30",
+    type: "patch",
+    title: "🔧 自动更新功能修复",
+    description: "修复桌面应用中自动更新功能的Tauri环境检测问题，增加详细的诊断信息，确保更新功能正常工作。",
+    features: [
+      { icon: "shield", text: "修复Tauri环境检测失败问题", highlight: true },
+      { icon: "zap", text: "增加详细的更新检查诊断日志" },
+      { icon: "settings", text: "优化更新权限配置和错误处理" },
+      { icon: "users", text: "改进用户反馈信息，提供更清晰的错误提示" }
+    ],
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.4",
+    releaseNotes: "这是一个重要的修复版本，解决了自动更新功能的技术问题。"
+  },
+  {
     version: "1.0.3",
     date: "2025-07-30",
     type: "patch",
@@ -34,7 +65,6 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "shield", text: "保持英文文件名，确保GitHub兼容性" },
       { icon: "users", text: "提升品牌识别度和用户体验" }
     ],
-    isNew: true,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.3",
     releaseNotes: "这个版本主要是产品名称的标准化更新，提升品牌一致性。"
   },

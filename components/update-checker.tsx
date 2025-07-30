@@ -25,27 +25,89 @@ export function UpdateChecker() {
 
   // 检查是否在Tauri环境中
   const isTauriApp = () => {
-    return typeof window !== 'undefined' && window.__TAURI__ !== undefined
+    // 多种方式检测Tauri环境
+    const hasTauriGlobal = typeof window !== 'undefined' && window.__TAURI__ !== undefined
+    const hasTauriUserAgent = navigator?.userAgent?.includes('Tauri') || false
+    const hasTauriInvoke = typeof window !== 'undefined' && typeof window.__TAURI_INVOKE__ === 'function'
+    const isElectron = navigator?.userAgent?.includes('Electron') || false
+
+    // 如果是Electron或明确的浏览器环境，返回false
+    if (isElectron || window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      // 但如果UserAgent包含Tauri，说明是Tauri应用
+      if (hasTauriUserAgent) {
+        console.log('Tauri环境检测: 通过UserAgent检测到Tauri')
+        return true
+      }
+      console.log('Tauri环境检测: 检测到浏览器环境')
+      return false
+    }
+
+    const isInTauri = hasTauriGlobal || hasTauriUserAgent || hasTauriInvoke
+
+    console.log('Tauri环境检测:', {
+      window: typeof window,
+      __TAURI__: typeof window?.__TAURI__,
+      __TAURI_INVOKE__: typeof window?.__TAURI_INVOKE__,
+      userAgent: navigator?.userAgent,
+      protocol: window.location.protocol,
+      hasTauriGlobal,
+      hasTauriUserAgent,
+      hasTauriInvoke,
+      isElectron,
+      finalResult: isInTauri
+    })
+
+    return isInTauri
   }
 
   // 检查更新
   const checkForUpdates = async (showToast = true) => {
     // 检查是否在Tauri环境中
-    if (!isTauriApp()) {
-      if (showToast) {
-        toast.info('更新功能仅在桌面应用中可用', {
-          description: '请下载桌面版本以使用自动更新功能',
-          icon: <AlertCircle className="h-4 w-4" />
-        })
+    const tauriDetected = isTauriApp()
+    if (!tauriDetected) {
+      // 如果检测失败，但我们在桌面应用中，仍然尝试调用更新API
+      console.log('Tauri环境检测失败，但仍尝试调用更新API')
+
+      // 如果是明确的浏览器环境（有http/https协议），则跳过
+      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+        if (showToast) {
+          toast.info('更新功能仅在桌面应用中可用', {
+            description: '请下载桌面版本以使用自动更新功能',
+            icon: <AlertCircle className="h-4 w-4" />
+          })
+        }
+        return
       }
-      return
+
+      // 否则继续尝试更新检查
+      console.log('非HTTP环境，继续尝试更新检查')
     }
 
     try {
       setIsChecking(true)
-      const update = await check()
+      console.log('UpdateChecker: 开始检查更新...')
+
+      // 尝试直接调用 Tauri API
+      let update
+      try {
+        update = await check()
+        console.log('UpdateChecker: 更新检查结果:', update)
+      } catch (apiError) {
+        console.error('UpdateChecker: Tauri API调用失败:', apiError)
+
+        // 如果API调用失败，尝试手动检查
+        if (showToast) {
+          toast.error('更新API调用失败', {
+            description: `错误: ${String(apiError)}`,
+            icon: <AlertCircle className="h-4 w-4" />,
+            duration: 10000
+          })
+        }
+        throw apiError
+      }
 
       if (update?.available) {
+        console.log('UpdateChecker: 发现新版本:', update.version)
         setUpdateInfo({
           version: update.version,
           date: update.date || new Date().toISOString(),
@@ -155,11 +217,15 @@ export function UpdateChecker() {
   useEffect(() => {
     // 只在Tauri环境中自动检查更新
     if (!isTauriApp()) {
+      console.log('UpdateChecker: 非Tauri环境，跳过自动更新检查')
       return
     }
 
+    console.log('UpdateChecker: Tauri环境检测成功，将在3秒后检查更新')
+
     // 延迟3秒后自动检查更新，避免影响应用启动
     const timer = setTimeout(() => {
+      console.log('UpdateChecker: 开始自动检查更新')
       checkForUpdates(false)
     }, 3000)
 
