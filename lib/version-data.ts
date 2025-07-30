@@ -23,6 +23,22 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.8",
+    date: "2025-07-30",
+    type: "patch",
+    title: "🔧 强化调试版本 - 强制启用开发者工具",
+    description: "强化调试版本，强制启用开发者工具和日志功能，禁用Web安全限制，确保调试功能在Release模式下也能正常工作。",
+    features: [
+      { icon: "settings", text: "强制启用开发者工具，不受构建模式限制", highlight: true },
+      { icon: "shield", text: "禁用Web安全限制，确保调试功能正常" },
+      { icon: "zap", text: "强制启用日志插件，提供详细调试信息" },
+      { icon: "users", text: "专门用于排查更新问题的强化调试版本" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.8",
+    releaseNotes: "这是一个强化调试版本，确保开发者工具在所有情况下都能正常工作。"
+  },
+  {
     version: "1.0.7",
     date: "2025-07-30",
     type: "patch",
@@ -34,7 +50,6 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "shield", text: "保持所有更新功能和环境检测逻辑" },
       { icon: "users", text: "临时调试版本，用于问题诊断" }
     ],
-    isNew: true,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.7",
     releaseNotes: "这是一个临时调试版本，启用了开发者工具以便排查更新问题。"
   },

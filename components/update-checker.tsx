@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
+import { invoke } from '@tauri-apps/api/core'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
@@ -22,6 +23,21 @@ export function UpdateChecker() {
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [isChecking, setIsChecking] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
+
+  // 强制打开开发者工具
+  const forceOpenDevtools = async () => {
+    try {
+      await invoke('open_devtools')
+      toast.success('开发者工具已打开', {
+        description: '如果没有看到开发者工具窗口，请检查任务栏'
+      })
+    } catch (error) {
+      console.error('打开开发者工具失败:', error)
+      toast.error('无法打开开发者工具', {
+        description: String(error)
+      })
+    }
+  }
 
   // 检查更新
   const checkForUpdates = async (showToast = true) => {
@@ -257,16 +273,29 @@ export function UpdateChecker() {
   return (
     <>
       {/* 手动检查更新按钮 */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => checkForUpdates(true)}
-        disabled={isChecking}
-        className="gap-2"
-      >
-        <RefreshCw className={`h-4 w-4 ${isChecking ? 'animate-spin' : ''}`} />
-        {isChecking ? '检查中...' : '检查更新'}
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => checkForUpdates(true)}
+          disabled={isChecking}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isChecking ? 'animate-spin' : ''}`} />
+          {isChecking ? '检查中...' : '检查更新'}
+        </Button>
+
+        {/* 调试按钮 */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={forceOpenDevtools}
+          className="gap-2"
+        >
+          <AlertCircle className="h-4 w-4" />
+          调试工具
+        </Button>
+      </div>
 
       {/* 更新对话框 */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>

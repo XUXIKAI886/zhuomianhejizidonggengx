@@ -1,12 +1,11 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "csch",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "identifier": "com.chengshangcehua.tools",
   "build": {
     "frontendDist": "../out",
-    "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npm run build",
     "beforeBuildCommand": "npm run build"
   },
   "app": {
