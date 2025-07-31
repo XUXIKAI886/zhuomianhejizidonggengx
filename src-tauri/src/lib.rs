@@ -14,6 +14,47 @@ fn get_debug_info() -> String {
   format!("Tauri应用调试信息 - 版本: {}", env!("CARGO_PKG_VERSION"))
 }
 
+// 打开外部URL命令
+#[tauri::command]
+async fn open_url(url: String) -> Result<String, String> {
+  // 使用标准库打开URL
+  #[cfg(target_os = "windows")]
+  {
+    use std::process::Command;
+    match Command::new("cmd")
+      .args(&["/C", "start", &url])
+      .spawn()
+    {
+      Ok(_) => Ok(format!("已打开URL: {}", url)),
+      Err(e) => Err(format!("打开URL失败: {}", e))
+    }
+  }
+
+  #[cfg(target_os = "macos")]
+  {
+    use std::process::Command;
+    match Command::new("open")
+      .arg(&url)
+      .spawn()
+    {
+      Ok(_) => Ok(format!("已打开URL: {}", url)),
+      Err(e) => Err(format!("打开URL失败: {}", e))
+    }
+  }
+
+  #[cfg(target_os = "linux")]
+  {
+    use std::process::Command;
+    match Command::new("xdg-open")
+      .arg(&url)
+      .spawn()
+    {
+      Ok(_) => Ok(format!("已打开URL: {}", url)),
+      Err(e) => Err(format!("打开URL失败: {}", e))
+    }
+  }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -42,7 +83,7 @@ pub fn run() {
     .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(tauri_plugin_process::init())
     .plugin(tauri_plugin_app::init())
-    .invoke_handler(tauri::generate_handler![open_devtools, get_debug_info])
+    .invoke_handler(tauri::generate_handler![open_devtools, get_debug_info, open_url])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

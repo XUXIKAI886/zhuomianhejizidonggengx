@@ -1,10 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { check } from '@tauri-apps/plugin-updater'
-import { relaunch } from '@tauri-apps/plugin-process'
 import { invoke } from '@tauri-apps/api/core'
-import { getVersion } from '@tauri-apps/api/app'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
@@ -29,33 +26,29 @@ export function UpdateChecker() {
   // 获取当前应用版本
   const getCurrentVersion = async () => {
     try {
-      // 在Tauri环境中尝试获取版本
+      // 在Tauri环境中直接使用配置文件版本，避免IPC通信问题
       if (typeof window !== 'undefined' && (window.__TAURI__ || window.__TAURI_INTERNALS__)) {
-        console.log('正在从Tauri API获取版本号...')
-        const version = await getVersion()
-        console.log('成功获取版本号:', version)
-        setCurrentVersion(version)
-        return version
+        console.log('Tauri环境检测成功，使用配置文件版本')
+
+        // 直接使用配置文件中的版本号，避免IPC通信失败
+        const configVersion = '1.0.12' // 从tauri.conf.json中的版本
+        console.log('当前应用版本:', configVersion)
+        setCurrentVersion(configVersion)
+
+        return configVersion
       } else {
         console.log('非Tauri环境，使用默认版本号')
-        const defaultVersion = '1.0.10'
+        const defaultVersion = '1.0.12'
         setCurrentVersion(defaultVersion)
         return defaultVersion
       }
     } catch (error) {
       console.error('获取应用版本失败:', error)
-      console.error('错误详情:', JSON.stringify(error, null, 2))
-      
+
       // 使用fallback版本号
-      const fallbackVersion = '1.0.10'
+      const fallbackVersion = '1.0.12'
       setCurrentVersion(fallbackVersion)
-      
-      // 显示详细错误信息
-      toast.error('版本获取失败', {
-        description: `错误: ${String(error)}, 使用默认版本: ${fallbackVersion}`,
-        duration: 5000
-      })
-      
+
       return fallbackVersion
     }
   }
@@ -168,46 +161,34 @@ export function UpdateChecker() {
         duration: 3000
       })
 
-      // 尝试直接调用 Tauri API，如果失败则使用HTTP fallback
+      // 直接使用HTTP API检查更新，避免IPC通信问题
       let update
       try {
-        console.log('UpdateChecker: 正在调用 Tauri check() API...')
-        update = await check()
-        console.log('UpdateChecker: Tauri API调用成功')
-      } catch (tauriError) {
-        console.warn('UpdateChecker: Tauri API失败，尝试HTTP fallback:', tauriError)
-        
-        // HTTP fallback
-        try {
-          toast.info('🔄 切换到HTTP请求模式', {
-            description: '直接访问更新服务器API',
-            duration: 3000
-          })
-          
-          const response = await fetch(`https://www.yujinkeji.asia/api/releases/windows-x86_64/${currentVersion}`)
-          const data = await response.json()
-          
-          console.log('HTTP API响应:', data)
-          
-          if (data.platforms && Object.keys(data.platforms).length > 0) {
-            update = {
-              available: true,
-              version: data.version,
-              body: data.notes,
-              date: data.pub_date
-            }
-            console.log('UpdateChecker: HTTP fallback成功，发现更新')
-          } else {
-            update = {
-              available: false,
-              version: currentVersion
-            }
-            console.log('UpdateChecker: HTTP fallback成功，无更新')
+        console.log('UpdateChecker: 使用HTTP API检查更新...')
+
+        const response = await fetch(`https://www.yujinkeji.asia/api/releases/windows-x86_64/${currentVersion}`)
+        const data = await response.json()
+
+        console.log('HTTP API响应:', data)
+
+        if (data.platforms && Object.keys(data.platforms).length > 0) {
+          update = {
+            available: true,
+            version: data.version,
+            body: data.notes,
+            date: data.pub_date
           }
-        } catch (httpError) {
-          console.error('HTTP fallback也失败:', httpError)
-          throw new Error(`Tauri API和HTTP API都失败了: ${tauriError}, ${httpError}`)
+          console.log('UpdateChecker: 发现更新版本:', data.version)
+        } else {
+          update = {
+            available: false,
+            version: currentVersion
+          }
+          console.log('UpdateChecker: 当前已是最新版本')
         }
+      } catch (httpError) {
+        console.error('HTTP API检查更新失败:', httpError)
+        throw new Error(`更新检查失败: ${httpError}`)
       }
       
       console.log('UpdateChecker: 最终更新检查结果:', update)
@@ -292,40 +273,35 @@ export function UpdateChecker() {
       setIsDownloading(true)
       setDownloadProgress(0)
 
-      const update = await check()
-      if (!update?.available) {
-        toast.error('更新不可用')
-        return
-      }
+      // 直接使用手动下载方式，避免IPC通信问题
+      console.log('UpdateChecker: 开始手动下载更新...')
 
-      // 监听下载进度
-      let downloaded = 0
-      let contentLength = 0
-      
-      await update.downloadAndInstall((event) => {
-        switch (event.event) {
-          case 'Started':
-            contentLength = event.data.contentLength || 0
-            toast.info('开始下载更新...')
-            break
-          case 'Progress':
-            downloaded += event.data.chunkLength || 0
-            if (contentLength > 0) {
-              const progress = Math.round((downloaded / contentLength) * 100)
-              setDownloadProgress(progress)
-            }
-            break
-          case 'Finished':
-            setDownloadProgress(100)
-            toast.success('更新下载完成，准备重启应用...')
-            break
-        }
+      toast.info('🌐 准备下载更新', {
+        description: '正在打开GitHub下载页面...',
+        duration: 3000
       })
 
-      // 重启应用以应用更新
-      setTimeout(async () => {
-        await relaunch()
-      }, 1000)
+      // 直接打开GitHub Release页面让用户手动下载
+      const downloadUrl = `https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v${updateInfo.version}/csch_${updateInfo.version}_x64-setup.exe`
+
+      // 在Tauri中打开外部链接
+      try {
+        await invoke('open_url', { url: downloadUrl })
+        toast.success('✅ 已打开下载页面', {
+          description: '请下载并运行安装包完成更新',
+          duration: 8000
+        })
+      } catch (openError) {
+        console.warn('Tauri打开URL失败，使用浏览器打开:', openError)
+        // 如果invoke失败，使用window.open作为fallback
+        window.open(downloadUrl, '_blank')
+        toast.success('✅ 已打开下载页面', {
+          description: '请下载并运行安装包完成更新',
+          duration: 8000
+        })
+      }
+
+      setShowDialog(false)
 
     } catch (error) {
       console.error('更新失败:', error)
