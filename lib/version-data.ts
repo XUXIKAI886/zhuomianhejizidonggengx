@@ -23,6 +23,22 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.10",
+    date: "2025-07-31",
+    type: "minor",
+    title: "🎯 用户体验优化版本 - 可视化更新提示",
+    description: "全面优化自动更新用户体验，添加启动时可视化更新检查提示，让用户清楚了解更新状态。修复UpdateChecker组件位置问题，确保自动更新功能完美运行。",
+    features: [
+      { icon: "sparkles", text: "新增启动时可视化更新检查提示", highlight: true },
+      { icon: "zap", text: "修复UpdateChecker组件位置，确保自动更新正常工作" },
+      { icon: "users", text: "优化用户反馈，明确显示更新检查结果" },
+      { icon: "settings", text: "完善Toast通知系统，提升交互体验" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.10",
+    releaseNotes: "这个版本主要优化了自动更新的用户体验，用户启动应用时会看到明确的更新检查提示，不再是静默检查。"
+  },
+  {
     version: "1.0.9",
     date: "2025-07-31",
     type: "patch",
@@ -34,7 +50,7 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "settings", text: "完善版本管理和发布流程" },
       { icon: "users", text: "提升系统稳定性和用户体验" }
     ],
-    isNew: true,
+    isNew: false,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.9",
     releaseNotes: "这个版本主要修复了自动更新系统的版本数据同步问题，确保用户能够正常接收更新通知。"
   },

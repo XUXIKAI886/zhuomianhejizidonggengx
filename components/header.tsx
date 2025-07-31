@@ -31,7 +31,13 @@ export function Header() {
   }
 
   return (
-    <header className="h-16 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 flex items-center shadow-sm">
+    <>
+      {/* 隐藏的更新检查器，用于后台自动检查更新 */}
+      <div className="hidden">
+        <UpdateChecker />
+      </div>
+      
+      <header className="h-16 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 flex items-center shadow-sm">
       {/* Logo and Title - Fixed width to match sidebar */}
       <div className="w-72 flex items-center space-x-4 px-6">
         <div className="relative">
@@ -129,9 +135,6 @@ export function Header() {
                     <Settings className="mr-3 h-4 w-4" />
                     <span>偏好设置</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-lg">
-                    <UpdateChecker />
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="rounded-lg text-rose-400 dark:text-rose-400 focus:text-rose-400 dark:focus:text-rose-400">
                     <span>退出登录</span>
@@ -143,5 +146,6 @@ export function Header() {
         </div>
       </div>
     </header>
+    </>
   )
 }

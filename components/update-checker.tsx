@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { invoke } from '@tauri-apps/api/core'
+import { getVersion } from '@tauri-apps/api/app'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
@@ -23,6 +24,24 @@ export function UpdateChecker() {
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [isChecking, setIsChecking] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
+  const [currentVersion, setCurrentVersion] = useState<string>('1.0.9')
+
+  // 获取当前应用版本
+  const getCurrentVersion = async () => {
+    try {
+      const version = await getVersion()
+      setCurrentVersion(version)
+      return version
+    } catch (error) {
+      console.error('获取应用版本失败:', error)
+      return '1.0.9' // 默认版本
+    }
+  }
+
+  // 初始化时获取版本号
+  useEffect(() => {
+    getCurrentVersion()
+  }, [])
 
   // 强制打开开发者工具
   const forceOpenDevtools = async () => {
@@ -130,18 +149,24 @@ export function UpdateChecker() {
         setShowDialog(true)
 
         if (showToast) {
-          toast.success(`发现新版本 v${update.version}`, {
-            description: '点击查看更新详情',
+          toast.success(`🎉 发现新版本 v${update.version}`, {
+            description: '点击立即更新到最新版本',
+            duration: 8000,
             action: {
-              label: '查看',
-              onClick: () => setShowDialog(true)
+              label: '立即更新',
+              onClick: () => {
+                setShowDialog(true)
+                // 可选：直接开始下载
+                // downloadAndInstall()
+              }
             }
           })
         }
       } else {
         if (showToast) {
-          toast.success('已是最新版本', {
-            description: '当前版本是最新的',
+          toast.success('✅ 当前已是最新版本', {
+            description: `版本 v${currentVersion} 无需更新`,
+            duration: 4000,
             icon: <CheckCircle className="h-4 w-4" />
           })
         }
@@ -261,10 +286,17 @@ export function UpdateChecker() {
 
     console.log('UpdateChecker: Tauri环境检测成功，将在3秒后检查更新')
 
+    // 显示启动时的更新检查提示
+    toast.info('🔍 正在检查应用更新...', {
+      description: '启动时自动检查最新版本',
+      duration: 2500,
+      icon: <RefreshCw className="h-4 w-4 animate-spin" />
+    })
+
     // 延迟3秒后自动检查更新，避免影响应用启动
     const timer = setTimeout(() => {
       console.log('UpdateChecker: 开始自动检查更新')
-      checkForUpdates(false)
+      checkForUpdates(true) // 改为 true，显示检查结果提示
     }, 3000)
 
     return () => clearTimeout(timer)
