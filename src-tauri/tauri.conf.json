@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "csch",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "identifier": "com.chengshangcehua.tools",
   "build": {
     "frontendDist": "../out",
@@ -12,10 +12,10 @@
     "windows": [
       {
         "title": "呈尚策划工具中心",
-        "width": 1200,
-        "height": 800,
-        "minWidth": 1000,
-        "minHeight": 700,
+        "width": 1480,
+        "height": 900,
+        "minWidth": 1200,
+        "minHeight": 750,
         "resizable": true,
         "fullscreen": false,
         "center": true,

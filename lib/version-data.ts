@@ -23,6 +23,24 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.16",
+    date: "2025-07-31",
+    type: "minor",
+    title: "📚 技术文档完善版本 - 深度技术债务预防体系",
+    description: "建立完整的技术文档体系和版本管理最佳实践。新增React异步状态管理技术问题防范清单，修复版本检测异常，创建企业级技术债务预防框架。",
+    features: [
+      { icon: "sparkles", text: "新增57页完整技术修复指南文档", highlight: true },
+      { icon: "shield", text: "修复React异步状态竞态条件，确保版本检测准确性", highlight: true },
+      { icon: "file", text: "创建技术问题防范清单，建立代码审查标准" },
+      { icon: "settings", text: "完善版本发布流程，从4步扩展到6步标准化流程" },
+      { icon: "zap", text: "更新README文档，新增深度技术问题解决方案" },
+      { icon: "users", text: "建立可复用的技术债务预防框架" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.16",
+    releaseNotes: "这是一个重要的技术完善版本，建立了完整的技术文档和预防体系，为项目长期稳定发展奠定基础。"
+  },
+  {
     version: "1.0.15",
     date: "2025-07-31",
     type: "minor",
@@ -33,7 +51,7 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "zap", text: "优化更新检查用户体验" },
       { icon: "settings", text: "简化更新流程和版本管理" }
     ],
-    isNew: true,
+    isNew: false,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.15"
   },
   {
