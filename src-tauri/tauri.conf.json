@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "csch",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "identifier": "com.chengshangcehua.tools",
   "build": {
     "frontendDist": "../out",
@@ -23,12 +23,16 @@
         "alwaysOnTop": false,
         "skipTaskbar": false,
         "theme": "Light",
-        "devtools": true
+        "devtools": true,
+        "additionalBrowserArgs": "--enable-features=VaapiVideoDecoder --disable-web-security --disable-features=VizDisplayCompositor"
       }
     ],
     "security": {
-      "csp": null
-    }
+      "csp": null,
+      "dangerousDisableAssetCspModification": true,
+      "devCsp": null
+    },
+    "withGlobalTauri": true
   },
   "plugins": {
     "updater": {

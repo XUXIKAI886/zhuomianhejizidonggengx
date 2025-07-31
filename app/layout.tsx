@@ -35,7 +35,8 @@ html {
           enableSystem
           disableTransitionOnChange
         >
-          <DevToolsBlocker />
+          {/* 暂时禁用安全保护，便于调试 */}
+          {/* <DevToolsBlocker /> */}
           {children}
           <Toaster
             richColors

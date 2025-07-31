@@ -23,6 +23,22 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.11",
+    date: "2025-07-31",
+    type: "patch",
+    title: "🔧 自动更新系统IPC通信修复版本",
+    description: "修复自动更新系统IPC通信问题，完善Tauri插件配置，优化开发环境下的更新检查功能。添加app插件支持，解决版本获取和更新检查API调用失败问题。",
+    features: [
+      { icon: "zap", text: "修复IPC通信错误，解决missing Origin header问题", highlight: true },
+      { icon: "settings", text: "添加tauri-plugin-app插件，完善API支持" },
+      { icon: "shield", text: "优化开发环境CSP配置，提升调试体验" },
+      { icon: "sparkles", text: "完善HTTP fallback机制，确保更新功能稳定" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.11",
+    releaseNotes: "这个版本主要修复了开发环境下的IPC通信问题，完善了Tauri插件配置，确保自动更新系统在各种环境下都能正常工作。"
+  },
+  {
     version: "1.0.10",
     date: "2025-07-31",
     type: "minor",

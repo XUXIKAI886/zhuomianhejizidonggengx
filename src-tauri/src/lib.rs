@@ -2,8 +2,10 @@ use tauri::Manager;
 
 // 添加调试信息命令
 #[tauri::command]
-fn open_devtools() -> String {
-  "开发者工具功能暂时不可用，请使用F12快捷键".to_string()
+async fn open_devtools() -> Result<String, String> {
+  // 注意：实际的开发者工具已通过禁用DevToolsBlocker实现
+  // 用户现在可以使用F12或Ctrl+Shift+I打开开发者工具
+  Ok("安全保护已禁用，请使用F12打开开发者工具".to_string())
 }
 
 // 添加调试信息命令
@@ -31,7 +33,7 @@ pub fn run() {
         let _ = window.unminimize();
 
         println!("桌面应用窗口已显示并置于前台");
-        println!("请使用F12快捷键打开开发者工具");
+        println!("开发者工具可通过F12或右键菜单打开");
       }
 
       Ok(())
@@ -39,6 +41,7 @@ pub fn run() {
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(tauri_plugin_process::init())
+    .plugin(tauri_plugin_app::init())
     .invoke_handler(tauri::generate_handler![open_devtools, get_debug_info])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

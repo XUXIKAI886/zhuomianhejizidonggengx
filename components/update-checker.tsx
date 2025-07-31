@@ -29,12 +29,34 @@ export function UpdateChecker() {
   // 获取当前应用版本
   const getCurrentVersion = async () => {
     try {
-      const version = await getVersion()
-      setCurrentVersion(version)
-      return version
+      // 在Tauri环境中尝试获取版本
+      if (typeof window !== 'undefined' && (window.__TAURI__ || window.__TAURI_INTERNALS__)) {
+        console.log('正在从Tauri API获取版本号...')
+        const version = await getVersion()
+        console.log('成功获取版本号:', version)
+        setCurrentVersion(version)
+        return version
+      } else {
+        console.log('非Tauri环境，使用默认版本号')
+        const defaultVersion = '1.0.10'
+        setCurrentVersion(defaultVersion)
+        return defaultVersion
+      }
     } catch (error) {
       console.error('获取应用版本失败:', error)
-      return '1.0.9' // 默认版本
+      console.error('错误详情:', JSON.stringify(error, null, 2))
+      
+      // 使用fallback版本号
+      const fallbackVersion = '1.0.10'
+      setCurrentVersion(fallbackVersion)
+      
+      // 显示详细错误信息
+      toast.error('版本获取失败', {
+        description: `错误: ${String(error)}, 使用默认版本: ${fallbackVersion}`,
+        duration: 5000
+      })
+      
+      return fallbackVersion
     }
   }
 
@@ -46,13 +68,13 @@ export function UpdateChecker() {
   // 强制打开开发者工具
   const forceOpenDevtools = async () => {
     try {
-      await invoke('open_devtools')
-      toast.success('开发者工具已打开', {
-        description: '如果没有看到开发者工具窗口，请检查任务栏'
+      const result = await invoke<string>('open_devtools')
+      toast.success('调试模式已启用', {
+        description: result + '，现在可以查看控制台日志'
       })
     } catch (error) {
-      console.error('打开开发者工具失败:', error)
-      toast.error('无法打开开发者工具', {
+      console.error('启用调试模式失败:', error)
+      toast.error('启用调试模式失败', {
         description: String(error)
       })
     }
@@ -62,31 +84,52 @@ export function UpdateChecker() {
   const checkForUpdates = async (showToast = true) => {
     // ✅ 修复后的Tauri环境检测逻辑
     const isTauriEnvironment = () => {
-      // 方法1: 检查Tauri全局对象
+      // 方法1: 检查window.__TAURI_INTERNALS__
+      if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
+        console.log('Tauri环境检测: 通过__TAURI_INTERNALS__检测成功')
+        return true
+      }
+      
+      // 方法2: 检查Tauri全局对象
       if (typeof window !== 'undefined' && window.__TAURI__) {
         console.log('Tauri环境检测: 通过__TAURI__全局对象检测成功')
         return true
       }
       
-      // 方法2: 检查Tauri相关API函数
+      // 方法3: 检查Tauri相关API函数
       if (typeof window !== 'undefined' && typeof window.__TAURI_INVOKE__ === 'function') {
         console.log('Tauri环境检测: 通过__TAURI_INVOKE__函数检测成功')
         return true
       }
       
-      // 方法3: 检查UserAgent中的Tauri标识
+      // 方法4: 检查特殊的开发模式URL特征
+      if (window.location.host.includes('tauri.localhost') || window.location.host.includes('localhost')) {
+        console.log('Tauri环境检测: 通过localhost检测成功 (开发模式)')
+        return true
+      }
+      
+      // 方法5: 检查UserAgent中的Tauri标识
       if (navigator?.userAgent?.includes('Tauri')) {
         console.log('Tauri环境检测: 通过UserAgent检测成功')
         return true
       }
       
-      // 方法4: 检查是否为桌面应用特有的协议
+      // 方法6: 检查是否为桌面应用特有的协议
       if (window.location.protocol === 'tauri:') {
         console.log('Tauri环境检测: 通过tauri://协议检测成功')
         return true
       }
       
       console.log('Tauri环境检测: 所有检测方法均未通过，判定为非Tauri环境')
+      console.log('当前环境信息:', {
+        protocol: window.location.protocol,
+        host: window.location.host,
+        href: window.location.href,
+        userAgent: navigator.userAgent,
+        __TAURI__: !!window.__TAURI__,
+        __TAURI_INTERNALS__: !!window.__TAURI_INTERNALS__,
+        __TAURI_INVOKE__: typeof window.__TAURI_INVOKE__
+      })
       return false
     }
 
@@ -119,24 +162,68 @@ export function UpdateChecker() {
       setIsChecking(true)
       console.log('UpdateChecker: 开始检查更新...')
 
-      // 尝试直接调用 Tauri API
+      // 添加网络请求追踪
+      toast.info('🌐 正在发送更新检查请求...', {
+        description: '向 www.yujinkeji.asia 发送请求',
+        duration: 3000
+      })
+
+      // 尝试直接调用 Tauri API，如果失败则使用HTTP fallback
       let update
       try {
+        console.log('UpdateChecker: 正在调用 Tauri check() API...')
         update = await check()
-        console.log('UpdateChecker: 更新检查结果:', update)
-      } catch (apiError) {
-        console.error('UpdateChecker: Tauri API调用失败:', apiError)
-
-        // 如果API调用失败，尝试手动检查
-        if (showToast) {
-          toast.error('更新API调用失败', {
-            description: `错误: ${String(apiError)}`,
-            icon: <AlertCircle className="h-4 w-4" />,
-            duration: 10000
+        console.log('UpdateChecker: Tauri API调用成功')
+      } catch (tauriError) {
+        console.warn('UpdateChecker: Tauri API失败，尝试HTTP fallback:', tauriError)
+        
+        // HTTP fallback
+        try {
+          toast.info('🔄 切换到HTTP请求模式', {
+            description: '直接访问更新服务器API',
+            duration: 3000
           })
+          
+          const response = await fetch(`https://www.yujinkeji.asia/api/releases/windows-x86_64/${currentVersion}`)
+          const data = await response.json()
+          
+          console.log('HTTP API响应:', data)
+          
+          if (data.platforms && Object.keys(data.platforms).length > 0) {
+            update = {
+              available: true,
+              version: data.version,
+              body: data.notes,
+              date: data.pub_date
+            }
+            console.log('UpdateChecker: HTTP fallback成功，发现更新')
+          } else {
+            update = {
+              available: false,
+              version: currentVersion
+            }
+            console.log('UpdateChecker: HTTP fallback成功，无更新')
+          }
+        } catch (httpError) {
+          console.error('HTTP fallback也失败:', httpError)
+          throw new Error(`Tauri API和HTTP API都失败了: ${tauriError}, ${httpError}`)
         }
-        throw apiError
       }
+      
+      console.log('UpdateChecker: 最终更新检查结果:', update)
+      console.log('UpdateChecker: API响应类型:', typeof update)
+      console.log('UpdateChecker: API响应详情:', JSON.stringify(update, null, 2))
+      
+      // 显示API响应详情
+      toast.info('📄 API响应详情', {
+        description: `
+类型: ${typeof update}
+可用性: ${update?.available ? '有更新' : '无更新'}  
+版本: ${update?.version || '未知'}
+数据: ${JSON.stringify(update, null, 2).substring(0, 200)}...
+        `.trim(),
+        duration: 10000
+      })
 
       if (update?.available) {
         console.log('UpdateChecker: 发现新版本:', update.version)
@@ -255,22 +342,32 @@ export function UpdateChecker() {
   useEffect(() => {
     // 使用与checkForUpdates相同的环境检测逻辑
     const isTauriEnvironment = () => {
-      // 方法1: 检查Tauri全局对象
+      // 方法1: 检查window.__TAURI_INTERNALS__
+      if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
+        return true
+      }
+      
+      // 方法2: 检查Tauri全局对象
       if (typeof window !== 'undefined' && window.__TAURI__) {
         return true
       }
       
-      // 方法2: 检查Tauri相关API函数
+      // 方法3: 检查Tauri相关API函数
       if (typeof window !== 'undefined' && typeof window.__TAURI_INVOKE__ === 'function') {
         return true
       }
       
-      // 方法3: 检查UserAgent中的Tauri标识
+      // 方法4: 检查特殊的开发模式URL特征
+      if (window.location.host.includes('tauri.localhost') || window.location.host.includes('localhost')) {
+        return true
+      }
+      
+      // 方法5: 检查UserAgent中的Tauri标识
       if (navigator?.userAgent?.includes('Tauri')) {
         return true
       }
       
-      // 方法4: 检查是否为桌面应用特有的协议
+      // 方法6: 检查是否为桌面应用特有的协议
       if (window.location.protocol === 'tauri:') {
         return true
       }
@@ -278,9 +375,19 @@ export function UpdateChecker() {
       return false
     }
 
+    const isInTauri = isTauriEnvironment()
+
     // 只在Tauri环境中自动检查更新
-    if (!isTauriEnvironment()) {
+    if (!isInTauri) {
       console.log('UpdateChecker: 非Tauri环境，跳过自动更新检查')
+      console.log('当前环境详情:', {
+        protocol: window.location.protocol,
+        host: window.location.host,
+        href: window.location.href,
+        userAgent: navigator.userAgent,
+        __TAURI__: !!window.__TAURI__,
+        __TAURI_INTERNALS__: !!window.__TAURI_INTERNALS__
+      })
       return
     }
 
@@ -293,10 +400,38 @@ export function UpdateChecker() {
       icon: <RefreshCw className="h-4 w-4 animate-spin" />
     })
 
+    // 立即显示详细调试信息
+    toast.info(`🐛 调试信息详情`, {
+      description: `
+环境: ${isInTauri ? 'Tauri桌面应用' : '浏览器'}
+协议: ${window.location.protocol}
+域名: ${window.location.host}
+路径: ${window.location.pathname}
+用户代理: ${navigator.userAgent.includes('Tauri') ? '包含Tauri标识' : '不含Tauri标识'}
+当前版本: ${currentVersion}
+      `.trim(),
+      duration: 8000
+    })
+
     // 延迟3秒后自动检查更新，避免影响应用启动
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       console.log('UpdateChecker: 开始自动检查更新')
-      checkForUpdates(true) // 改为 true，显示检查结果提示
+      
+      // 添加更多调试信息
+      toast.info('🔍 开始调用Tauri更新API...', {
+        description: '正在连接更新服务器',
+        duration: 3000
+      })
+      
+      try {
+        await checkForUpdates(true) // 改为 true，显示检查结果提示
+      } catch (error) {
+        console.error('自动更新检查失败:', error)
+        toast.error('自动更新检查失败', {
+          description: `错误: ${String(error)}`,
+          duration: 5000
+        })
+      }
     }, 3000)
 
     return () => clearTimeout(timer)
