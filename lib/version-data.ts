@@ -23,6 +23,22 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.9",
+    date: "2025-07-31",
+    type: "patch",
+    title: "🔧 自动更新系统修复版本",
+    description: "修复自动更新系统版本数据同步问题，确保更新功能正常工作。优化更新检查机制和错误处理，提升系统稳定性。",
+    features: [
+      { icon: "zap", text: "修复版本数据同步问题，确保更新检查正常", highlight: true },
+      { icon: "shield", text: "优化更新检查机制和错误处理逻辑" },
+      { icon: "settings", text: "完善版本管理和发布流程" },
+      { icon: "users", text: "提升系统稳定性和用户体验" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.9",
+    releaseNotes: "这个版本主要修复了自动更新系统的版本数据同步问题，确保用户能够正常接收更新通知。"
+  },
+  {
     version: "1.0.8",
     date: "2025-07-30",
     type: "patch",
@@ -34,7 +50,6 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "zap", text: "强制启用日志插件，提供详细调试信息" },
       { icon: "users", text: "专门用于排查更新问题的强化调试版本" }
     ],
-    isNew: true,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.8",
     releaseNotes: "这是一个强化调试版本，确保开发者工具在所有情况下都能正常工作。"
   },

@@ -4,6 +4,27 @@ const semver = require('semver');
 const releases = {
   'windows-x86_64': [
     {
+      version: '1.0.9',
+      notes: '• 修复自动更新系统版本数据同步问题\n• 优化更新检查机制和错误处理\n• 提升系统稳定性和用户体验\n• 完善版本管理和发布流程',
+      pub_date: '2025-07-31T08:00:00Z',
+      signature: 'dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNDJSNXU5VWZ4SGFuZGxlciBBcHBsaWNhdGlvbgpSV1NCQU8zdDA4anVKc2I2YTBGQVNBVnhzV3J1MjBJMXJhcEtnNm1RRUNBTGczZ1FBQVJZSTFNRVowNlNUYWVJcw==',
+      url: 'https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v1.0.9/csch_1.0.9_x64-setup.exe'
+    },
+    {
+      version: '1.0.8',
+      notes: '• 强化调试版本，强制启用开发者工具\n• 禁用Web安全限制，确保调试功能正常\n• 强制启用日志插件，提供详细调试信息\n• 专门用于排查更新问题的强化调试版本',
+      pub_date: '2025-07-30T12:00:00Z',
+      signature: 'dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNDJSNXU5VWZ4SGFuZGxlciBBcHBsaWNhdGlvbgpSV1NCQU8zdDA4anVKc2I2YTBGQVNBVnhzV3J1MjBJMXJhcEtnNm1RRUNBTGczZ1FBQVJZSTFNRVowNlNUYWVJcw==',
+      url: 'https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v1.0.8/csch_1.0.8_x64-setup.exe'
+    },
+    {
+      version: '1.0.7',
+      notes: '• 临时启用开发者工具，便于排查自动更新问题\n• 增强调试日志输出，便于问题排查\n• 保持所有更新功能和环境检测逻辑\n• 临时调试版本，用于问题诊断',
+      pub_date: '2025-07-30T11:00:00Z',
+      signature: 'dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNDJSNXU5VWZ4SGFuZGxlciBBcHBsaWNhdGlvbgpSV1NCQU8zdDA4anVKc2I2YTBGQVNBVnhzV3J1MjBJMXJhcEtnNm1RRUNBTGczZ1FBQVJZSTFNRVowNlNUYWVJcw==',
+      url: 'https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v1.0.7/csch_1.0.7_x64-setup.exe'
+    },
+    {
       version: '1.0.6',
       notes: '• 更新服务器域名优化\n• 提升国内用户访问稳定性\n• 简化Tauri环境检测逻辑\n• 优化更新检查机制，减少误报',
       pub_date: '2025-07-30T10:00:00Z',
