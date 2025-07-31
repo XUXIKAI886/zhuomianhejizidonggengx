@@ -23,6 +23,20 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.15",
+    date: "2025-07-31",
+    type: "minor",
+    title: "🎯 更新弹窗优化版本",
+    description: "优化更新检查用户体验，移除多余的调试弹窗，只保留关键的更新提示。简化更新流程，提供更清晰的版本管理和更新通知。",
+    features: [
+      { icon: "sparkles", text: "移除多余的调试弹窗提示", highlight: true },
+      { icon: "zap", text: "优化更新检查用户体验" },
+      { icon: "settings", text: "简化更新流程和版本管理" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.15"
+  },
+  {
     version: "1.0.11",
     date: "2025-07-31",
     type: "patch",

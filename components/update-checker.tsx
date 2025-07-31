@@ -41,7 +41,7 @@ export function UpdateChecker() {
           console.warn('Tauri API获取版本失败，使用配置文件版本:', tauriError)
 
           // 如果Tauri API失败，使用配置文件版本作为fallback
-          const configVersion = '1.0.13' // 从tauri.conf.json中的版本
+          const configVersion = '1.0.15' // 从tauri.conf.json中的版本
           console.log('使用配置文件版本:', configVersion)
           setCurrentVersion(configVersion)
 
@@ -50,7 +50,7 @@ export function UpdateChecker() {
         }
       } else {
         console.log('非Tauri环境，使用默认版本号')
-        const defaultVersion = '1.0.13'
+        const defaultVersion = '1.0.15'
         setCurrentVersion(defaultVersion)
         return defaultVersion
       }
@@ -58,7 +58,7 @@ export function UpdateChecker() {
       console.error('获取应用版本失败:', error)
 
       // 使用fallback版本号
-      const fallbackVersion = '1.0.13'
+      const fallbackVersion = '1.0.15'
       setCurrentVersion(fallbackVersion)
 
       return fallbackVersion
@@ -167,11 +167,7 @@ export function UpdateChecker() {
       setIsChecking(true)
       console.log('UpdateChecker: 开始检查更新...')
 
-      // 添加网络请求追踪
-      toast.info('🌐 正在发送更新检查请求...', {
-        description: '向 www.yujinkeji.asia 发送请求',
-        duration: 3000
-      })
+      // 静默检查更新，不显示中间过程提示
 
       // 直接使用HTTP API检查更新，避免IPC通信问题
       let update
@@ -208,15 +204,7 @@ export function UpdateChecker() {
       console.log('UpdateChecker: API响应详情:', JSON.stringify(update, null, 2))
       
       // 显示API响应详情
-      toast.info('📄 API响应详情', {
-        description: `
-类型: ${typeof update}
-可用性: ${update?.available ? '有更新' : '无更新'}  
-版本: ${update?.version || '未知'}
-数据: ${JSON.stringify(update, null, 2).substring(0, 200)}...
-        `.trim(),
-        duration: 10000
-      })
+      // 静默处理API响应，不显示调试信息
 
       if (update?.available) {
         console.log('UpdateChecker: 发现新版本:', update.version)
@@ -288,10 +276,7 @@ export function UpdateChecker() {
       // 直接使用手动下载方式，避免IPC通信问题
       console.log('UpdateChecker: 开始手动下载更新...')
 
-      toast.info('🌐 准备下载更新', {
-        description: '正在打开GitHub下载页面...',
-        duration: 3000
-      })
+      // 静默准备下载，不显示中间提示
 
       // 直接打开GitHub Release页面让用户手动下载
       const downloadUrl = `https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v${updateInfo.version}/csch_${updateInfo.version}_x64-setup.exe`
@@ -381,35 +366,15 @@ export function UpdateChecker() {
 
     console.log('UpdateChecker: Tauri环境检测成功，将在3秒后检查更新')
 
-    // 显示启动时的更新检查提示
-    toast.info('🔍 正在检查应用更新...', {
-      description: '启动时自动检查最新版本',
-      duration: 2500,
-      icon: <RefreshCw className="h-4 w-4 animate-spin" />
-    })
+    // 静默启动更新检查，不显示启动提示
 
-    // 立即显示详细调试信息
-    toast.info(`🐛 调试信息详情`, {
-      description: `
-环境: ${isInTauri ? 'Tauri桌面应用' : '浏览器'}
-协议: ${window.location.protocol}
-域名: ${window.location.host}
-路径: ${window.location.pathname}
-用户代理: ${navigator.userAgent.includes('Tauri') ? '包含Tauri标识' : '不含Tauri标识'}
-当前版本: ${currentVersion}
-      `.trim(),
-      duration: 8000
-    })
+    // 静默记录调试信息，不显示弹窗
 
     // 延迟3秒后自动检查更新，避免影响应用启动
     const timer = setTimeout(async () => {
       console.log('UpdateChecker: 开始自动检查更新')
       
-      // 添加更多调试信息
-      toast.info('🔍 开始调用Tauri更新API...', {
-        description: '正在连接更新服务器',
-        duration: 3000
-      })
+      // 静默开始更新检查
       
       try {
         await checkForUpdates(true) // 改为 true，显示检查结果提示
