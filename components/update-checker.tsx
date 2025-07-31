@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
+import { getVersion } from '@tauri-apps/api/app'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
@@ -26,19 +27,30 @@ export function UpdateChecker() {
   // 获取当前应用版本
   const getCurrentVersion = async () => {
     try {
-      // 在Tauri环境中直接使用配置文件版本，避免IPC通信问题
+      // 在Tauri环境中尝试获取真实版本号
       if (typeof window !== 'undefined' && (window.__TAURI__ || window.__TAURI_INTERNALS__)) {
-        console.log('Tauri环境检测成功，使用配置文件版本')
+        console.log('Tauri环境检测成功，尝试获取应用版本...')
 
-        // 直接使用配置文件中的版本号，避免IPC通信失败
-        const configVersion = '1.0.12' // 从tauri.conf.json中的版本
-        console.log('当前应用版本:', configVersion)
-        setCurrentVersion(configVersion)
+        try {
+          // 首先尝试使用Tauri API获取版本
+          const actualVersion = await getVersion()
+          console.log('成功获取应用版本:', actualVersion)
+          setCurrentVersion(actualVersion)
+          return actualVersion
+        } catch (tauriError) {
+          console.warn('Tauri API获取版本失败，使用配置文件版本:', tauriError)
 
-        return configVersion
+          // 如果Tauri API失败，使用配置文件版本作为fallback
+          const configVersion = '1.0.13' // 从tauri.conf.json中的版本
+          console.log('使用配置文件版本:', configVersion)
+          setCurrentVersion(configVersion)
+
+          // 静默处理，不显示错误toast
+          return configVersion
+        }
       } else {
         console.log('非Tauri环境，使用默认版本号')
-        const defaultVersion = '1.0.12'
+        const defaultVersion = '1.0.13'
         setCurrentVersion(defaultVersion)
         return defaultVersion
       }
@@ -46,7 +58,7 @@ export function UpdateChecker() {
       console.error('获取应用版本失败:', error)
 
       // 使用fallback版本号
-      const fallbackVersion = '1.0.12'
+      const fallbackVersion = '1.0.13'
       setCurrentVersion(fallbackVersion)
 
       return fallbackVersion
