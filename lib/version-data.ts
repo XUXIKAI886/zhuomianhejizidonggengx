@@ -38,7 +38,7 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "file", text: "完善的技术文档和操作手册" },
       { icon: "globe", text: "优化系统性能和用户体验" }
     ],
-    isNew: true,
+    isNew: false,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.17",
     releaseNotes: "MongoDB管理系统与详细日志监控功能发布",
     breaking: false,
