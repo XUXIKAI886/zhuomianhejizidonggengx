@@ -36,7 +36,7 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "users", text: "跨设备Token同步管理" },
       { icon: "globe", text: "登录页面品牌化升级" }
     ],
-    isNew: true,
+    isNew: false,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.18",
     security: true
   },
