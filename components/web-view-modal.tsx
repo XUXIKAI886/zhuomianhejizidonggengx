@@ -36,6 +36,8 @@ import {
   Minimize2
 } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/lib/auth/auth-context"
+import { apiCall } from "@/lib/tauri-api"
 
 interface WebViewModalProps {
   isOpen: boolean
@@ -50,17 +52,47 @@ interface WebViewModalProps {
 }
 
 export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
+  const { state } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(true)
+  const [startTime, setStartTime] = useState<number | null>(null)
 
   useEffect(() => {
     if (isOpen && tool) {
       setIsLoading(true)
       setHasError(false)
       setIsFullscreen(true) // 每次打开工具时默认最大化
+      setStartTime(Date.now()) // 记录开始时间
     }
   }, [isOpen, tool])
+
+  // 追踪工具使用时长
+  const trackToolUsage = async () => {
+    if (state.user && tool && startTime) {
+      const duration = Math.floor((Date.now() - startTime) / 1000) // 计算使用时长（秒）
+      if (duration > 0) { // 只记录有效的使用时长
+        try {
+          await apiCall('track_user_activity', {
+            userId: state.user.id,
+            activityType: 'tool_usage',
+            toolId: tool.id,
+            toolName: tool.name,
+            duration: duration
+          })
+          console.log(`记录工具使用时长: ${tool.name} - ${duration}秒`)
+        } catch (error) {
+          console.error('记录工具使用时长失败:', error)
+        }
+      }
+    }
+  }
+
+  // 修改onClose处理函数
+  const handleClose = () => {
+    trackToolUsage()
+    onClose()
+  }
 
   // 键盘快捷键支持
   useEffect(() => {
@@ -72,9 +104,9 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
         if (isFullscreen) {
           setIsFullscreen(false)
           // 延迟关闭，让用户看到退出全屏的效果
-          setTimeout(() => onClose(), 100)
+          setTimeout(() => handleClose(), 100)
         } else {
-          onClose()
+          handleClose()
         }
       }
       if (event.key === 'F5' && isOpen) {
@@ -94,7 +126,7 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
         window.removeEventListener('keydown', handleKeyDown, true)
       }
     }
-  }, [isOpen, isFullscreen, onClose])
+  }, [isOpen, isFullscreen, handleClose])
 
   const handleIframeLoad = () => {
     setIsLoading(false)
@@ -148,7 +180,7 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
   if (!tool) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <CustomDialogContent
         className={`p-0 overflow-hidden transition-all duration-300 flex flex-col ${
           isFullscreen
@@ -202,7 +234,7 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
               </button>
 
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none p-1"
                 title="关闭"
               >

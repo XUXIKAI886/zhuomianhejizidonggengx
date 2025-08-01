@@ -11,6 +11,8 @@ import {
 import { toolsData } from "@/lib/tool-data"
 import { ToolLauncher } from "@/utils/toolLauncher"
 import { WebViewModal } from "@/components/web-view-modal"
+import { useAuth } from "@/lib/auth/auth-context"
+import { apiCall } from "@/lib/tauri-api"
 // toast 导入已移除
 
 interface ToolGridProps {
@@ -19,6 +21,7 @@ interface ToolGridProps {
 }
 
 export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGridProps) {
+  const { state } = useAuth()
   const [launchingTool, setLaunchingTool] = useState<number | null>(null)
   const [webViewModal, setWebViewModal] = useState<{
     isOpen: boolean
@@ -40,6 +43,28 @@ export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGr
   })
 
   const handleLaunchTool = async (tool: typeof toolsData[0]) => {
+    console.log(`🎯 [前端] 用户点击工具: ${tool.name} (ID: ${tool.id})`)
+    console.log(`🎯 [前端] 当前用户状态:`, state.user)
+    
+    // 记录工具点击统计
+    if (state.user) {
+      try {
+        console.log(`🎯 [前端] 准备调用 track_user_activity API`)
+        const result = await apiCall('track_user_activity', {
+          userId: state.user.id,
+          activityType: 'tool_click',
+          toolId: tool.id,
+          toolName: tool.name,
+          duration: null
+        })
+        console.log(`✅ [前端] 工具点击记录成功: ${tool.name} (ID: ${tool.id})`, result)
+      } catch (error) {
+        console.error(`❌ [前端] 记录工具点击失败:`, error)
+      }
+    } else {
+      console.error(`❌ [前端] 用户未登录，无法记录工具点击`)
+    }
+
     // 直接在应用内打开WebView
     setWebViewModal({
       isOpen: true,

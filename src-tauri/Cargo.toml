@@ -34,3 +34,9 @@ sha2 = "0.10"
 tokio = { version = "1.0", features = ["full"] }
 uuid = { version = "1.0", features = ["v4"] }
 futures = "0.3"
+
+# Token管理和本地存储依赖
+jsonwebtoken = "9.3"
+rand = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
+tauri-plugin-store = "2"

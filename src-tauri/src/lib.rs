@@ -96,6 +96,7 @@ pub fn run() {
     .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(tauri_plugin_process::init())
     .plugin(tauri_plugin_app::init())
+    .plugin(tauri_plugin_store::Builder::default().build())
     .invoke_handler(tauri::generate_handler![
       open_devtools,
       get_debug_info,
@@ -103,11 +104,16 @@ pub fn run() {
       auth::login,
       auth::logout,
       auth::check_session,
+      auth::verify_token_and_login,
       auth::get_all_users_admin,
       auth::get_system_overview,
       auth::track_user_activity,
       auth::get_user_analytics,
       auth::get_system_analytics,
+      auth::generate_test_data,
+      auth::clear_test_data,
+      auth::debug_user_data,
+      auth::init_user_login_counts,
       auth::create_user,
       auth::edit_user,
       auth::delete_user,

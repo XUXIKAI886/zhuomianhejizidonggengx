@@ -4,6 +4,47 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { toast } from 'sonner'
 import { apiCall } from '@/lib/tauri-api'
 
+// Token存储键名
+const REMEMBER_ME_TOKEN_KEY = 'chengshang_remember_me_token'
+const AUTO_LOGIN_TOKEN_KEY = 'chengshang_auto_login_token'
+
+// Token管理辅助函数
+const saveToken = (key: string, token: string) => {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(key, token)
+    }
+  } catch (error) {
+    console.error('保存Token失败:', error)
+  }
+}
+
+const getToken = (key: string): string | null => {
+  try {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(key)
+    }
+  } catch (error) {
+    console.error('获取Token失败:', error)
+  }
+  return null
+}
+
+const removeToken = (key: string) => {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(key)
+    }
+  } catch (error) {
+    console.error('删除Token失败:', error)
+  }
+}
+
+const clearAllTokens = () => {
+  removeToken(REMEMBER_ME_TOKEN_KEY)
+  removeToken(AUTO_LOGIN_TOKEN_KEY)
+}
+
 // 用户类型定义
 export interface User {
   id: string
@@ -132,14 +173,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'LOGIN_START' })
 
     try {
-      const user = await apiCall('login', {
+      const loginResponse = await apiCall('login', {
         username,
         password,
         rememberMe,
         autoLogin,
       })
 
+      // 提取用户信息
+      const user = loginResponse.user || loginResponse
+
       dispatch({ type: 'LOGIN_SUCCESS', payload: user })
+
+      // 保存Token到本地存储
+      if (rememberMe && loginResponse.rememberMeToken) {
+        saveToken(REMEMBER_ME_TOKEN_KEY, loginResponse.rememberMeToken)
+        console.log('✅ 记住我Token已保存')
+      }
+
+      if (autoLogin && loginResponse.autoLoginToken) {
+        saveToken(AUTO_LOGIN_TOKEN_KEY, loginResponse.autoLoginToken)
+        console.log('✅ 自动登录Token已保存')
+      }
 
       // 记录登录成功日志
       try {
@@ -147,6 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           userId: user.id,
           activityType: 'login',
           toolId: null,
+          toolName: null,
           duration: null,
         })
       } catch (trackError) {
@@ -175,6 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             userId: state.user.id,
             activityType: 'logout',
             toolId: null,
+            toolName: null,
             duration: null,
           })
         } catch (apiError) {
@@ -182,11 +239,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // 清除本地存储的Token
+      clearAllTokens()
+      console.log('✅ 本地Token已清除')
+
       dispatch({ type: 'LOGOUT' })
       toast.success('已安全退出登录')
     } catch (error) {
       console.error('登出失败:', error)
-      // 即使后端登出失败，也要清除前端状态
+      // 即使后端登出失败，也要清除前端状态和Token
+      clearAllTokens()
       dispatch({ type: 'LOGOUT' })
       toast.error('登出时发生错误，但已清除本地会话')
     }
@@ -195,14 +257,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 检查会话函数
   const checkSession = async (): Promise<void> => {
     try {
+      // 首先尝试检查当前会话
       const user = await apiCall('check_session')
       dispatch({ type: 'CHECK_SESSION_SUCCESS', payload: user })
+      return
     } catch (error) {
-      // 在Web环境下，会话检查通常会失败，这是正常行为
-      // 因为Next.js API路由是无状态的
-      console.log('会话检查失败，用户需要重新登录:', error)
-      dispatch({ type: 'CHECK_SESSION_FAILURE' })
+      console.log('当前会话无效，尝试Token自动登录:', error)
     }
+
+    // 尝试使用自动登录Token
+    const autoLoginToken = getToken(AUTO_LOGIN_TOKEN_KEY)
+    if (autoLoginToken) {
+      try {
+        console.log('🔄 尝试自动登录Token验证...')
+        const user = await apiCall('verify_token_and_login', {
+          token: autoLoginToken,
+          tokenType: 'auto_login'
+        })
+        dispatch({ type: 'CHECK_SESSION_SUCCESS', payload: user })
+        console.log('✅ 自动登录成功')
+        return
+      } catch (tokenError) {
+        console.log('自动登录Token无效:', tokenError)
+        removeToken(AUTO_LOGIN_TOKEN_KEY)
+      }
+    }
+
+    // 尝试使用记住我Token
+    const rememberMeToken = getToken(REMEMBER_ME_TOKEN_KEY)
+    if (rememberMeToken) {
+      try {
+        console.log('🔄 尝试记住我Token验证...')
+        const user = await apiCall('verify_token_and_login', {
+          token: rememberMeToken,
+          tokenType: 'remember_me'
+        })
+        dispatch({ type: 'CHECK_SESSION_SUCCESS', payload: user })
+        console.log('✅ 记住我登录成功')
+        return
+      } catch (tokenError) {
+        console.log('记住我Token无效:', tokenError)
+        removeToken(REMEMBER_ME_TOKEN_KEY)
+      }
+    }
+
+    // 所有验证都失败，用户需要重新登录
+    console.log('所有会话验证失败，用户需要重新登录')
+    dispatch({ type: 'CHECK_SESSION_FAILURE' })
   }
 
   // 清除错误函数

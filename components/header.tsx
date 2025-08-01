@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Settings, Moon, Sun, User, Bell, Maximize2, LogOut } from "lucide-react"
+import { Search, Settings, Moon, Sun, User, Bell, Maximize2, LogOut, UserCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -39,10 +39,6 @@ export function Header() {
     router.push('/login')
   }
 
-  // 获取用户名首字母作为头像
-  const getUserInitials = (username: string) => {
-    return username.charAt(0).toUpperCase()
-  }
 
   return (
     <>
@@ -117,13 +113,8 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800">
                     <Avatar className="h-9 w-9 ring-2 ring-white/20 dark:ring-gray-700/50 shadow-lg">
-                      <AvatarImage src="/user-avatar.svg" alt="用户头像" className="object-cover" />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-300 via-purple-300 to-indigo-400 text-white font-bold text-sm shadow-inner">
-                        <div className="flex items-center justify-center w-full h-full">
-                          <span className="drop-shadow-sm">
-                            {state.user ? getUserInitials(state.user.username) : '呈'}
-                          </span>
-                        </div>
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 text-white shadow-inner">
+                        <UserCircle className="h-6 w-6" />
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -131,13 +122,8 @@ export function Header() {
                 <DropdownMenuContent className="w-64 p-2" align="end" forceMount>
                   <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg mb-2">
                     <Avatar className="h-10 w-10 ring-2 ring-blue-200/50 dark:ring-blue-700/30 shadow-lg">
-                      <AvatarImage src="/user-avatar.svg" alt="用户头像" className="object-cover" />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-300 via-purple-300 to-indigo-400 text-white font-bold shadow-inner">
-                        <div className="flex items-center justify-center w-full h-full">
-                          <span className="drop-shadow-sm">
-                            {state.user ? getUserInitials(state.user.username) : '呈'}
-                          </span>
-                        </div>
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 text-white shadow-inner">
+                        <UserCircle className="h-7 w-7" />
                       </AvatarFallback>
                     </Avatar>
                     <div>

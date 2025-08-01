@@ -1,9 +1,15 @@
 use serde::{Deserialize, Serialize};
 use mongodb::{Client, Database, Collection, bson::{doc, oid::ObjectId, DateTime}};
 // MongoDB cursor handling - no external futures traits needed
+use futures::TryStreamExt;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use sha2::{Sha256, Digest};
+
+// Token管理相关依赖
+use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
+use rand::Rng;
+use chrono::{Utc, Duration};
 
 // 用户数据结构
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -44,6 +50,16 @@ pub struct UserResponse {
     pub login_count: i64,
 }
 
+// 登录响应结构（包含Token信息）
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LoginResponse {
+    pub user: UserResponse,
+    #[serde(rename = "rememberMeToken")]
+    pub remember_me_token: Option<String>,
+    #[serde(rename = "autoLoginToken")]
+    pub auto_login_token: Option<String>,
+}
+
 // 工具使用统计
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ToolUsage {
@@ -76,6 +92,37 @@ pub struct UserSession {
     pub logout_at: Option<DateTime>,
     #[serde(rename = "sessionDuration")]
     pub session_duration: Option<i64>,
+}
+
+// 用户Token管理
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserToken {
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
+    pub id: Option<ObjectId>,
+    #[serde(rename = "userId")]
+    pub user_id: ObjectId,
+    pub token: String,
+    #[serde(rename = "tokenType")]
+    pub token_type: String, // "remember_me" | "auto_login"
+    #[serde(rename = "createdAt")]
+    pub created_at: DateTime,
+    #[serde(rename = "expiresAt")]
+    pub expires_at: DateTime,
+    #[serde(rename = "isActive")]
+    pub is_active: bool,
+    #[serde(rename = "deviceInfo")]
+    pub device_info: Option<String>,
+}
+
+// JWT Claims结构
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TokenClaims {
+    pub sub: String, // 用户ID
+    pub username: String,
+    pub role: String,
+    pub token_type: String,
+    pub exp: i64, // 过期时间
+    pub iat: i64, // 签发时间
 }
 
 // 系统统计
@@ -202,6 +249,10 @@ impl MongoManager {
     pub fn user_sessions(&self) -> Collection<UserSession> {
         self.database.collection("user_sessions")
     }
+
+    pub fn user_tokens(&self) -> Collection<UserToken> {
+        self.database.collection("user_tokens")
+    }
 }
 
 // 全局状态管理
@@ -252,15 +303,61 @@ fn verify_password(password: &str, hash: &str) -> bool {
     hash_password(password) == hash
 }
 
+// Token管理常量
+const JWT_SECRET: &str = "chengshang_tools_jwt_secret_2025";
+const REMEMBER_ME_DAYS: i64 = 30; // 记住我Token有效期30天
+const AUTO_LOGIN_DAYS: i64 = 7;   // 自动登录Token有效期7天
+
+// 生成JWT Token
+fn generate_token(user: &UserResponse, token_type: &str, days: i64) -> Result<String, String> {
+    let now = Utc::now();
+    let exp = now + Duration::days(days);
+
+    let claims = TokenClaims {
+        sub: user.id.clone(),
+        username: user.username.clone(),
+        role: user.role.clone(),
+        token_type: token_type.to_string(),
+        exp: exp.timestamp(),
+        iat: now.timestamp(),
+    };
+
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+    )
+    .map_err(|e| format!("Token生成失败: {}", e))
+}
+
+// 验证JWT Token
+fn verify_token(token: &str) -> Result<TokenClaims, String> {
+    decode::<TokenClaims>(
+        token,
+        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &Validation::default(),
+    )
+    .map(|data| data.claims)
+    .map_err(|e| format!("Token验证失败: {}", e))
+}
+
+// 生成随机Token ID
+fn generate_token_id() -> String {
+    let mut rng = rand::thread_rng();
+    (0..32)
+        .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
+        .collect()
+}
+
 // Tauri命令实现
 #[tauri::command]
 pub async fn login(
     username: String,
     password: String,
-    _remember_me: Option<bool>,
-    _auto_login: Option<bool>,
+    remember_me: Option<bool>,
+    auto_login: Option<bool>,
     state: tauri::State<'_, AppState>,
-) -> Result<UserResponse, String> {
+) -> Result<LoginResponse, String> {
     let mongo = state.mongo.read().await;
     
     // 查找用户
@@ -314,11 +411,76 @@ pub async fn login(
     updated_user.login_count += 1;
     
     let user_response = UserResponse::from(updated_user);
-    
+
+    // 初始化Token变量
+    let mut remember_me_token: Option<String> = None;
+    let mut auto_login_token: Option<String> = None;
+
+    // 处理记住我和自动登录Token
+    if remember_me.unwrap_or(false) || auto_login.unwrap_or(false) {
+        // 清除该用户的旧Token
+        let user_object_id = ObjectId::parse_str(&user_response.id)
+            .map_err(|e| format!("用户ID解析失败: {}", e))?;
+
+        mongo.user_tokens()
+            .delete_many(doc! {"userId": user_object_id})
+            .await
+            .map_err(|e| format!("清除旧Token失败: {}", e))?;
+
+        // 生成记住我Token
+        if remember_me.unwrap_or(false) {
+            let token = generate_token(&user_response, "remember_me", REMEMBER_ME_DAYS)?;
+            let user_token = UserToken {
+                id: None,
+                user_id: user_object_id,
+                token: token.clone(),
+                token_type: "remember_me".to_string(),
+                created_at: now,
+                expires_at: DateTime::from_millis((Utc::now() + Duration::days(REMEMBER_ME_DAYS)).timestamp_millis()),
+                is_active: true,
+                device_info: None,
+            };
+
+            mongo.user_tokens()
+                .insert_one(user_token)
+                .await
+                .map_err(|e| format!("保存记住我Token失败: {}", e))?;
+
+            remember_me_token = Some(token);
+        }
+
+        // 生成自动登录Token
+        if auto_login.unwrap_or(false) {
+            let token = generate_token(&user_response, "auto_login", AUTO_LOGIN_DAYS)?;
+            let user_token = UserToken {
+                id: None,
+                user_id: user_object_id,
+                token: token.clone(),
+                token_type: "auto_login".to_string(),
+                created_at: now,
+                expires_at: DateTime::from_millis((Utc::now() + Duration::days(AUTO_LOGIN_DAYS)).timestamp_millis()),
+                is_active: true,
+                device_info: None,
+            };
+
+            mongo.user_tokens()
+                .insert_one(user_token)
+                .await
+                .map_err(|e| format!("保存自动登录Token失败: {}", e))?;
+
+            auto_login_token = Some(token);
+        }
+    }
+
     // 保存当前用户到状态
     *state.current_user.write().await = Some(user_response.clone());
-    
-    Ok(user_response)
+
+    // 返回登录响应
+    Ok(LoginResponse {
+        user: user_response,
+        remember_me_token,
+        auto_login_token,
+    })
 }
 
 #[tauri::command]
@@ -346,10 +508,16 @@ pub async fn logout(
         )
         .await
         .map_err(|e| format!("更新会话失败: {}", e))?;
-    
+
+    // 清除用户的所有Token（记住我和自动登录）
+    mongo.user_tokens()
+        .delete_many(doc! {"userId": user_object_id})
+        .await
+        .map_err(|e| format!("清除Token失败: {}", e))?;
+
     // 清除当前用户状态
     *state.current_user.write().await = None;
-    
+
     Ok(())
 }
 
@@ -358,11 +526,94 @@ pub async fn check_session(
     state: tauri::State<'_, AppState>,
 ) -> Result<UserResponse, String> {
     let current_user = state.current_user.read().await;
-    
+
     match current_user.as_ref() {
         Some(user) => Ok(user.clone()),
         None => Err("未登录".to_string()),
     }
+}
+
+// 通过Token验证用户身份
+#[tauri::command]
+pub async fn verify_token_and_login(
+    token: String,
+    token_type: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<UserResponse, String> {
+    // 验证JWT Token
+    let claims = verify_token(&token)?;
+
+    // 检查Token类型是否匹配
+    if claims.token_type != token_type {
+        return Err("Token类型不匹配".to_string());
+    }
+
+    let mongo = state.mongo.read().await;
+
+    // 检查Token是否在数据库中存在且有效
+    let user_object_id = ObjectId::parse_str(&claims.sub)
+        .map_err(|e| format!("用户ID解析失败: {}", e))?;
+
+    let token_doc = mongo.user_tokens()
+        .find_one(doc! {
+            "userId": user_object_id,
+            "token": &token,
+            "tokenType": &token_type,
+            "isActive": true,
+            "expiresAt": {"$gt": DateTime::now()}
+        })
+        .await
+        .map_err(|e| format!("Token查询失败: {}", e))?;
+
+    if token_doc.is_none() {
+        return Err("Token无效或已过期".to_string());
+    }
+
+    // 获取用户信息
+    let user = mongo.users()
+        .find_one(doc! {"_id": user_object_id})
+        .await
+        .map_err(|e| format!("用户查询失败: {}", e))?
+        .ok_or("用户不存在")?;
+
+    // 检查用户状态
+    if !user.is_active {
+        return Err("账号已被禁用".to_string());
+    }
+
+    // 更新最后登录时间
+    let now = DateTime::now();
+    mongo.users()
+        .update_one(
+            doc! {"_id": user_object_id},
+            doc! {"$set": {"lastLoginAt": now}}
+        )
+        .await
+        .map_err(|e| format!("更新登录时间失败: {}", e))?;
+
+    // 创建会话记录
+    let session = UserSession {
+        id: None,
+        user_id: user_object_id,
+        login_at: now,
+        logout_at: None,
+        session_duration: None,
+    };
+
+    mongo.user_sessions()
+        .insert_one(session)
+        .await
+        .map_err(|e| format!("创建会话失败: {}", e))?;
+
+    // 转换为响应格式
+    let mut updated_user = user;
+    updated_user.last_login_at = Some(now);
+    let user_response = UserResponse::from(updated_user);
+
+    // 保存当前用户到状态
+    *state.current_user.write().await = Some(user_response.clone());
+
+    Ok(user_response)
 }
 
 #[tauri::command]
@@ -431,14 +682,21 @@ pub async fn track_user_activity(
     user_id: String,
     activity_type: String,
     tool_id: Option<i32>,
+    tool_name: Option<String>,
     duration: Option<i64>,
     state: tauri::State<'_, AppState>,
 ) -> Result<(), String> {
+    println!("🎯 [track_user_activity] 开始追踪用户活动: 用户ID={}, 活动类型={}, 工具ID={:?}, 工具名称={:?}, 时长={:?}", 
+             user_id, activity_type, tool_id, tool_name, duration);
+    
     let mongo = state.mongo.read().await;
     
     // 解析用户ID
     let user_object_id = ObjectId::parse_str(&user_id)
-        .map_err(|e| format!("无效的用户ID: {}", e))?;
+        .map_err(|e| {
+            println!("❌ [track_user_activity] 无效的用户ID: {}", e);
+            format!("无效的用户ID: {}", e)
+        })?;
     
     match activity_type.as_str() {
         "login" => {
@@ -451,7 +709,10 @@ pub async fn track_user_activity(
             println!("记录用户登出活动: {}", user_id);
         },
         "tool_click" => {
+            println!("🎯 [track_user_activity] 处理工具点击事件");
             if let Some(tid) = tool_id {
+                println!("🎯 [track_user_activity] 工具ID: {}, 用户ObjectID: {}", tid, user_object_id);
+                
                 // 更新或插入工具使用记录
                 let filter = doc! {
                     "userId": user_object_id,
@@ -460,17 +721,29 @@ pub async fn track_user_activity(
                 
                 let update = doc! {
                     "$inc": {"clickCount": 1},
-                    "$set": {"lastUsedAt": DateTime::now()},
+                    "$set": {
+                        "lastUsedAt": DateTime::now(),
+                        "toolName": tool_name.clone().unwrap_or_else(|| format!("工具{}", tid))
+                    },
                     "$setOnInsert": {
-                        "toolName": format!("工具{}", tid),
                         "totalUsageTime": 0
                     }
                 };
                 
-                mongo.tool_usage()
+                println!("🎯 [track_user_activity] 准备更新MongoDB工具使用记录...");
+                let result = mongo.tool_usage()
                     .update_one(filter, update)
+                    .upsert(true)
                     .await
-                    .map_err(|e| format!("更新工具使用记录失败: {}", e))?;
+                    .map_err(|e| {
+                        println!("❌ [track_user_activity] 更新工具使用记录失败: {}", e);
+                        format!("更新工具使用记录失败: {}", e)
+                    })?;
+                
+                println!("✅ [track_user_activity] 工具点击记录成功: 工具ID={}, 匹配数={:?}, 修改数={:?}, 插入ID={:?}", 
+                         tid, result.matched_count, result.modified_count, result.upserted_id);
+            } else {
+                println!("❌ [track_user_activity] 工具点击事件缺少工具ID");
             }
         },
         "tool_usage" => {
@@ -481,7 +754,10 @@ pub async fn track_user_activity(
                 };
                 
                 let update = doc! {
-                    "$inc": {"totalUsageTime": dur}
+                    "$inc": {"totalUsageTime": dur},
+                    "$set": {
+                        "toolName": tool_name.clone().unwrap_or_else(|| format!("工具{}", tid))
+                    }
                 };
                 
                 mongo.tool_usage()
@@ -490,9 +766,13 @@ pub async fn track_user_activity(
                     .map_err(|e| format!("更新工具使用时长失败: {}", e))?;
             }
         },
-        _ => return Err(format!("未知的活动类型: {}。支持的类型: login, logout, tool_click, tool_usage", activity_type)),
+        _ => {
+            println!("❌ [track_user_activity] 未知的活动类型: {}", activity_type);
+            return Err(format!("未知的活动类型: {}。支持的类型: login, logout, tool_click, tool_usage", activity_type));
+        }
     }
     
+    println!("✅ [track_user_activity] 用户活动追踪完成: 用户ID={}, 活动类型={}", user_id, activity_type);
     Ok(())
 }
 
@@ -502,6 +782,7 @@ pub async fn get_user_analytics(
     state: tauri::State<'_, AppState>,
     limit: Option<i64>,
 ) -> Result<Vec<UserAnalytics>, String> {
+    println!("🔍 [get_user_analytics] 开始获取用户分析数据，限制: {:?}", limit);
     let mongo = state.mongo.read().await;
     
     let pipeline = vec![
@@ -520,6 +801,7 @@ pub async fn get_user_analytics(
             "$addFields": {
                 "totalToolClicks": { "$sum": "$tool_usage.clickCount" },
                 "totalUsageTime": { "$sum": "$tool_usage.totalUsageTime" },
+                "loginCount": { "$ifNull": ["$loginCount", 0] }, // 保留原有的loginCount字段
                 "favoriteTools": {
                     "$map": {
                         "input": { "$slice": [
@@ -542,18 +824,23 @@ pub async fn get_user_analytics(
         }
     ];
 
+    println!("📊 [get_user_analytics] 执行MongoDB聚合管道查询...");
     let mut cursor = mongo.users()
         .aggregate(pipeline)
         .await
-        .map_err(|e| format!("聚合查询失败: {}", e))?;
+        .map_err(|e| {
+            println!("❌ [get_user_analytics] 聚合查询失败: {}", e);
+            format!("聚合查询失败: {}", e)
+        })?;
 
+    println!("✅ [get_user_analytics] 聚合查询成功，开始处理结果...");
     let mut results = Vec::new();
     while cursor.advance().await.map_err(|e| format!("遍历聚合结果失败: {}", e))? {
         let document = cursor.deserialize_current().map_err(|e| format!("反序列化聚合结果失败: {}", e))?;
         let user_analytics = UserAnalytics {
             id: document.get_object_id("_id")
                 .map(|id| id.to_hex())
-                .unwrap_or_default(),
+                .unwrap_or_else(|_| format!("unknown-{}", results.len())),
             username: document.get_str("username").unwrap_or("").to_string(),
             role: document.get_str("role").unwrap_or("user").to_string(),
             is_active: document.get_bool("isActive").unwrap_or(false),
@@ -572,9 +859,12 @@ pub async fn get_user_analytics(
                     .collect())
                 .unwrap_or_default(),
         };
+        println!("👤 [get_user_analytics] 处理用户: {} (点击: {}, 时长: {}, 登录: {})", 
+                 user_analytics.username, user_analytics.total_tool_clicks, user_analytics.total_usage_time, user_analytics.login_count);
         results.push(user_analytics);
     }
 
+    println!("🎯 [get_user_analytics] 完成，返回 {} 个用户分析数据", results.len());
     Ok(results)
 }
 
@@ -583,27 +873,43 @@ pub async fn get_user_analytics(
 pub async fn get_system_analytics(
     state: tauri::State<'_, AppState>,
 ) -> Result<SystemAnalytics, String> {
+    println!("🔍 [get_system_analytics] 开始获取系统分析数据...");
     let mongo = state.mongo.read().await;
     
     // 获取基本统计
+    println!("📊 [get_system_analytics] 查询总用户数...");
     let total_users = mongo.users()
         .count_documents(doc! {"isActive": true})
         .await
-        .map_err(|e| format!("查询用户数失败: {}", e))? as i64;
+        .map_err(|e| {
+            println!("❌ [get_system_analytics] 查询用户数失败: {}", e);
+            format!("查询用户数失败: {}", e)
+        })? as i64;
+    println!("✅ [get_system_analytics] 总用户数: {}", total_users);
 
     // 获取今日活跃用户数 - 简化时间计算
+    println!("📊 [get_system_analytics] 查询今日活跃用户数...");
     let now = DateTime::now();
     let today_start = DateTime::from_millis(now.timestamp_millis() - 86400000); // 24小时前
     let active_users_today = mongo.user_sessions()
         .count_documents(doc! {"loginAt": {"$gte": today_start}})
         .await
-        .map_err(|e| format!("查询今日活跃用户失败: {}", e))? as i64;
+        .map_err(|e| {
+            println!("❌ [get_system_analytics] 查询今日活跃用户失败: {}", e);
+            format!("查询今日活跃用户失败: {}", e)
+        })? as i64;
+    println!("✅ [get_system_analytics] 今日活跃用户数: {}", active_users_today);
 
     // 获取总会话数
+    println!("📊 [get_system_analytics] 查询总会话数...");
     let total_sessions = mongo.user_sessions()
         .count_documents(doc! {})
         .await
-        .map_err(|e| format!("查询总会话数失败: {}", e))? as i64;
+        .map_err(|e| {
+            println!("❌ [get_system_analytics] 查询总会话数失败: {}", e);
+            format!("查询总会话数失败: {}", e)
+        })? as i64;
+    println!("✅ [get_system_analytics] 总会话数: {}", total_sessions);
 
     // 计算平均会话时长
     let session_pipeline = vec![
@@ -634,6 +940,7 @@ pub async fn get_system_analytics(
     };
 
     // 获取最受欢迎的工具 - 高级聚合查询
+    println!("📊 [get_system_analytics] 开始查询工具使用统计...");
     let tool_pipeline = vec![
         doc! {
             "$group": {
@@ -660,7 +967,11 @@ pub async fn get_system_analytics(
     let mut tool_cursor = mongo.tool_usage()
         .aggregate(tool_pipeline)
         .await
-        .map_err(|e| format!("工具统计聚合失败: {}", e))?;
+        .map_err(|e| {
+            println!("❌ [get_system_analytics] 工具统计聚合失败: {}", e);
+            format!("工具统计聚合失败: {}", e)
+        })?;
+    println!("✅ [get_system_analytics] 工具统计聚合查询成功");
 
     let mut most_popular_tools = Vec::new();
     while tool_cursor.advance().await.map_err(|e| format!("遍历工具统计失败: {}", e))? {
@@ -672,8 +983,11 @@ pub async fn get_system_analytics(
             total_usage_time: doc.get_i64("totalUsageTime").unwrap_or(0),
             unique_users: doc.get_i64("uniqueUserCount").unwrap_or(0),
         };
+        println!("🔧 [get_system_analytics] 工具统计: {} - 点击:{}, 时长:{}, 用户:{}", 
+                 tool.tool_name, tool.total_clicks, tool.total_usage_time, tool.unique_users);
         most_popular_tools.push(tool);
     }
+    println!("✅ [get_system_analytics] 完成工具统计，找到 {} 个工具", most_popular_tools.len());
 
     // 简化版的趋势数据 (实际项目中应该基于时间范围查询)
     let user_growth_trend = vec![
@@ -694,7 +1008,7 @@ pub async fn get_system_analytics(
         }
     ];
 
-    Ok(SystemAnalytics {
+    let result = SystemAnalytics {
         total_users,
         active_users_today,
         total_sessions,
@@ -702,7 +1016,11 @@ pub async fn get_system_analytics(
         most_popular_tools,
         user_growth_trend,
         tool_usage_trend,
-    })
+    };
+    
+    println!("🎯 [get_system_analytics] 完成系统分析数据获取: 用户:{}, 活跃:{}, 会话:{}, 工具数:{}", 
+             result.total_users, result.active_users_today, result.total_sessions, result.most_popular_tools.len());
+    Ok(result)
 }
 
 // 创建新用户 - 管理员功能
@@ -1185,4 +1503,248 @@ pub async fn toggle_user_status(
     updated_user.is_active = new_status;
     
     Ok(UserResponse::from(updated_user))
+}
+
+// 测试数据生成API - 仅用于开发调试
+#[tauri::command]
+pub async fn generate_test_data(
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    println!("🧪 [generate_test_data] 开始生成测试数据...");
+    let mongo = state.mongo.read().await;
+    
+    // 创建测试工具使用数据
+    let test_tools = vec![
+        ("AI写作助手", 1, 150, 7200),
+        ("美团运营知识学习系统", 2, 89, 5400),
+        ("外卖店铺完整运营流程", 3, 76, 4200),
+        ("域锦科技AI系统", 4, 65, 3600),
+        ("微信群发助手", 5, 54, 2800),
+        ("运营数据统计分析", 6, 43, 2100),
+        ("销售数据报告生成系统", 7, 32, 1500),
+        ("财务记账系统", 8, 28, 1200),
+        ("智能排班系统", 9, 21, 900),
+        ("人事面试顾问系统", 10, 15, 600),
+    ];
+    
+    // 获取现有用户ID
+    let user_cursor = mongo.users().find(doc! {"isActive": true}).await.map_err(|e| format!("查询用户失败: {}", e))?;
+    let users: Vec<User> = user_cursor.try_collect().await.map_err(|e| format!("收集用户失败: {}", e))?;
+    
+    if users.is_empty() {
+        return Err("没有找到活跃用户，无法生成测试数据".to_string());
+    }
+    
+    println!("📊 [generate_test_data] 找到 {} 个用户，为其生成工具使用数据", users.len());
+    
+    let mut inserted_count = 0;
+    
+    for user in &users {
+        let user_object_id = user.id.as_ref().ok_or("用户ID为空")?;
+        
+        // 为每个用户随机生成一些工具使用数据
+        for (tool_name, tool_id, base_clicks, base_time) in &test_tools {
+            // 随机化数据，让每个用户的使用情况不同
+            use std::collections::hash_map::DefaultHasher;
+            use std::hash::{Hash, Hasher};
+            
+            let mut hasher = DefaultHasher::new();
+            user_object_id.hash(&mut hasher);
+            tool_id.hash(&mut hasher);
+            let seed = hasher.finish();
+            
+            let click_multiplier = ((seed % 3) + 1) as i64; // 1到3倍
+            let time_multiplier = ((seed % 4) + 1) as i64; // 1到4倍
+            
+            let final_clicks = base_clicks * click_multiplier / 2;
+            let final_time = base_time * time_multiplier / 2;
+            
+            let tool_usage_doc = doc! {
+                "userId": user_object_id,
+                "toolId": tool_id,
+                "toolName": tool_name,
+                "clickCount": final_clicks,
+                "totalUsageTime": final_time,
+                "lastUsedAt": DateTime::now(),
+                "createdAt": DateTime::now(),
+            };
+            
+            // 使用upsert避免重复插入
+            let result = mongo.tool_usage()
+                .update_one(
+                    doc! {"userId": user_object_id, "toolId": tool_id},
+                    doc! {"$set": tool_usage_doc}
+                )
+                .upsert(true)
+                .await
+                .map_err(|e| format!("插入工具使用数据失败: {}", e))?;
+                
+            if result.upserted_id.is_some() {
+                inserted_count += 1;
+                println!("📝 [generate_test_data] 为用户 {} 生成工具数据: {} (点击:{}, 时长:{})", 
+                         user.username, tool_name, final_clicks, final_time);
+            }
+        }
+    }
+    
+    // 生成一些用户会话数据
+    for user in &users {
+        let user_object_id = user.id.as_ref().ok_or("用户ID为空")?;
+        
+        // 为每个用户生成3-5个会话记录
+        for i in 0..4 {
+            let session_duration = 1800 + (i * 600); // 30分钟到2小时不等
+            let login_time = DateTime::from_millis(DateTime::now().timestamp_millis() - (i as i64 * 86400000)); // 最近几天
+            let logout_time = DateTime::from_millis(login_time.timestamp_millis() + (session_duration * 1000));
+            
+            let session = UserSession {
+                id: None,
+                user_id: *user_object_id,
+                login_at: login_time,
+                logout_at: Some(logout_time),
+                session_duration: Some(session_duration),
+            };
+            
+            mongo.user_sessions()
+                .insert_one(session)
+                .await
+                .map_err(|e| format!("插入会话数据失败: {}", e))?;
+        }
+        
+        println!("📅 [generate_test_data] 为用户 {} 生成了4个会话记录", user.username);
+    }
+    
+    println!("🎯 [generate_test_data] 测试数据生成完成！");
+    println!("   工具使用记录: {} 条", inserted_count);
+    println!("   用户会话记录: {} 条", users.len() * 4);
+    
+    Ok(format!("✅ 测试数据生成成功！\n工具使用记录: {} 条\n用户会话记录: {} 条", 
+               inserted_count, users.len() * 4))
+}
+
+// 清除测试数据API - 仅用于开发调试
+#[tauri::command]
+pub async fn clear_test_data(
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    println!("🧹 [clear_test_data] 开始清除测试数据...");
+    let mongo = state.mongo.read().await;
+    
+    // 清除工具使用数据
+    println!("📊 [clear_test_data] 清除工具使用数据...");
+    let tool_usage_result = mongo.tool_usage()
+        .delete_many(doc! {})
+        .await
+        .map_err(|e| format!("清除工具使用数据失败: {}", e))?;
+    println!("✅ [clear_test_data] 清除工具使用记录: {} 条", tool_usage_result.deleted_count);
+    
+    // 清除用户会话数据
+    println!("📅 [clear_test_data] 清除用户会话数据...");
+    let sessions_result = mongo.user_sessions()
+        .delete_many(doc! {})
+        .await
+        .map_err(|e| format!("清除会话数据失败: {}", e))?;
+    println!("✅ [clear_test_data] 清除会话记录: {} 条", sessions_result.deleted_count);
+    
+    // 不清除用户数据，只清除统计相关的测试数据
+    println!("💡 [clear_test_data] 保留用户账号数据，仅清除统计数据");
+    
+    println!("🎯 [clear_test_data] 测试数据清除完成！");
+    println!("   工具使用记录: {} 条已删除", tool_usage_result.deleted_count);
+    println!("   用户会话记录: {} 条已删除", sessions_result.deleted_count);
+    
+    Ok(format!("✅ 测试数据清除成功！\n工具使用记录: {} 条已删除\n用户会话记录: {} 条已删除\n\n💡 用户账号数据已保留", 
+               tool_usage_result.deleted_count, sessions_result.deleted_count))
+}
+
+// 调试API - 查看用户表的实际数据结构
+#[tauri::command]
+pub async fn debug_user_data(
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    println!("🔍 [debug_user_data] 开始检查用户数据结构...");
+    let mongo = state.mongo.read().await;
+    
+    let cursor = mongo.users().find(doc! {}).await.map_err(|e| format!("查询用户失败: {}", e))?;
+    let users: Vec<User> = cursor.try_collect().await.map_err(|e| format!("收集用户失败: {}", e))?;
+    
+    let mut debug_info = String::new();
+    debug_info.push_str("📊 用户数据调试信息:\n\n");
+    
+    for user in &users {
+        debug_info.push_str(&format!("👤 用户: {}\n", user.username));
+        debug_info.push_str(&format!("   ID: {:?}\n", user.id));
+        debug_info.push_str(&format!("   角色: {}\n", user.role));
+        debug_info.push_str(&format!("   激活状态: {}\n", user.is_active));
+        debug_info.push_str(&format!("   登录次数: {}\n", user.login_count));
+        debug_info.push_str(&format!("   总使用时长: {}\n", user.total_usage_time));
+        debug_info.push_str(&format!("   最后登录: {:?}\n", user.last_login_at));
+        debug_info.push_str(&format!("   创建时间: {:?}\n", user.created_at));
+        debug_info.push_str("\n");
+        
+        println!("👤 [debug_user_data] 用户: {} - 登录次数: {}", user.username, user.login_count);
+    }
+    
+    debug_info.push_str(&format!("总用户数: {}\n", users.len()));
+    
+    println!("🎯 [debug_user_data] 调试信息收集完成");
+    Ok(debug_info)
+}
+
+// 初始化用户登录计数 - 为现有用户添加缺失字段
+#[tauri::command]
+pub async fn init_user_login_counts(
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    println!("🔧 [init_user_login_counts] 开始初始化用户登录计数...");
+    let mongo = state.mongo.read().await;
+    
+    // 查找所有用户并为他们初始化登录计数
+    let result = mongo.users()
+        .update_many(
+            doc! {}, // 匹配所有用户
+            doc! {
+                "$setOnInsert": {
+                    "loginCount": 0,
+                    "totalUsageTime": 0
+                }
+            }
+        )
+        .await
+        .map_err(|e| format!("初始化登录计数失败: {}", e))?;
+    
+    println!("✅ [init_user_login_counts] 更新结果: 匹配 {} 个用户", result.matched_count);
+    
+    // 现在基于用户会话数据更新实际的登录次数
+    let users_cursor = mongo.users().find(doc! {}).await.map_err(|e| format!("查询用户失败: {}", e))?;
+    let users: Vec<User> = users_cursor.try_collect().await.map_err(|e| format!("收集用户失败: {}", e))?;
+    
+    let mut updated_users = 0;
+    
+    for user in &users {
+        if let Some(user_id) = &user.id {
+            // 计算这个用户的实际登录次数
+            let login_count = mongo.user_sessions()
+                .count_documents(doc! {"userId": user_id})
+                .await
+                .map_err(|e| format!("计算登录次数失败: {}", e))? as i64;
+            
+            // 更新用户的登录次数
+            let update_result = mongo.users()
+                .update_one(
+                    doc! {"_id": user_id},
+                    doc! {"$set": {"loginCount": login_count}}
+                )
+                .await
+                .map_err(|e| format!("更新登录次数失败: {}", e))?;
+            
+            if update_result.modified_count > 0 {
+                updated_users += 1;
+                println!("✅ [init_user_login_counts] 用户 {} 登录次数设置为: {}", user.username, login_count);
+            }
+        }
+    }
+    
+    println!("🎯 [init_user_login_counts] 初始化完成，更新了 {} 个用户", updated_users);
+    Ok(format!("✅ 用户登录计数初始化完成！\n更新了 {} 个用户的登录次数", updated_users))
 }

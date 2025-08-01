@@ -23,6 +23,24 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.18",
+    date: "2025-08-01",
+    type: "minor",
+    title: "🔐 企业级Token认证系统 - 记住我与自动登录",
+    description: "全新实现企业级Token认证系统，支持记住我和自动登录功能。采用JWT Token + MongoDB存储，提供30天记住我和7天自动登录，大幅提升用户体验的同时保持企业级安全标准。",
+    features: [
+      { icon: "shield", text: "JWT Token安全认证系统", highlight: true },
+      { icon: "zap", text: "记住我功能 - 30天免登录体验" },
+      { icon: "sparkles", text: "自动登录功能 - 应用启动即登录" },
+      { icon: "settings", text: "智能会话恢复机制" },
+      { icon: "users", text: "跨设备Token同步管理" },
+      { icon: "globe", text: "登录页面品牌化升级" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.18",
+    security: true
+  },
+  {
     version: "1.0.17",
     date: "2025-08-01",
     type: "minor",

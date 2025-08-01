@@ -21,7 +21,9 @@ import {
   BarChart3,
   PieChart as PieChartIcon,
   Calendar,
-  Zap
+  Zap,
+  Bug,
+  RefreshCw
 } from 'lucide-react'
 
 // 数据类型定义
@@ -104,6 +106,75 @@ export function MongoDBDashboard() {
   const handleRefresh = async () => {
     setRefreshing(true)
     await loadDashboardData()
+  }
+
+  const handleGenerateTestData = async () => {
+    try {
+      setRefreshing(true)
+      const result = await apiCall('generate_test_data')
+      console.log('测试数据生成结果:', result)
+      // 重新加载数据以显示新生成的测试数据
+      await loadDashboardData()
+    } catch (error: any) {
+      console.error('生成测试数据失败:', error)
+      setError('生成测试数据失败: ' + error.message)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
+  const handleClearTestData = async () => {
+    if (!confirm('确定要清除所有测试数据吗？\n\n这将删除：\n- 所有工具使用记录\n- 所有用户会话记录\n\n用户账号将被保留。')) {
+      return
+    }
+
+    try {
+      setRefreshing(true)
+      const result = await apiCall('clear_test_data')
+      console.log('测试数据清除结果:', result)
+      // 重新加载数据以显示清除后的状态
+      await loadDashboardData()
+    } catch (error: any) {
+      console.error('清除测试数据失败:', error)
+      setError('清除测试数据失败: ' + error.message)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
+  const handleDebugUserData = async () => {
+    try {
+      setRefreshing(true)
+      const result = await apiCall('debug_user_data')
+      console.log('用户数据结构调试结果:', result)
+      // 显示调试结果给用户
+      alert('用户数据结构调试结果已输出到控制台，请查看开发者工具')
+    } catch (error: any) {
+      console.error('调试用户数据失败:', error)
+      setError('调试用户数据失败: ' + error.message)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
+  const handleInitLoginCounts = async () => {
+    if (!confirm('确定要初始化用户登录次数吗？\n\n这将：\n- 基于会话数据计算实际登录次数\n- 更新所有用户的loginCount字段')) {
+      return
+    }
+
+    try {
+      setRefreshing(true)
+      const result = await apiCall('init_user_login_counts')
+      console.log('登录次数初始化结果:', result)
+      alert('登录次数初始化完成: ' + result)
+      // 重新加载数据以显示更新后的登录次数
+      await loadDashboardData()
+    } catch (error: any) {
+      console.error('初始化登录次数失败:', error)
+      setError('初始化登录次数失败: ' + error.message)
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   useEffect(() => {
@@ -191,10 +262,28 @@ export function MongoDBDashboard() {
             企业级数据库管理和实时统计分析
           </p>
         </div>
-        <Button onClick={handleRefresh} disabled={refreshing} variant="outline">
-          <Activity className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? '刷新中...' : '刷新数据'}
-        </Button>
+        <div className="flex space-x-2">
+          <Button onClick={handleRefresh} disabled={refreshing} variant="outline">
+            <Activity className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? '刷新中...' : '刷新数据'}
+          </Button>
+          <Button onClick={handleGenerateTestData} disabled={refreshing} variant="secondary">
+            <Database className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            生成测试数据
+          </Button>
+          <Button onClick={handleClearTestData} disabled={refreshing} variant="destructive">
+            <Database className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            清除测试数据
+          </Button>
+          <Button onClick={handleDebugUserData} disabled={refreshing} variant="ghost" className="border">
+            <Bug className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            调试用户数据
+          </Button>
+          <Button onClick={handleInitLoginCounts} disabled={refreshing} variant="default">
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            修复登录次数
+          </Button>
+        </div>
       </div>
 
       {/* MongoDB连接状态 */}
@@ -302,8 +391,8 @@ export function MongoDBDashboard() {
                       fill="#8884d8"
                       dataKey="totalClicks"
                     >
-                      {analytics?.mostPopularTools.slice(0, 6).map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      {analytics?.mostPopularTools.slice(0, 6).map((tool, index) => (
+                        <Cell key={tool.toolId || `cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip formatter={(value) => [formatNumber(value as number), '点击次数']} />
@@ -351,7 +440,7 @@ export function MongoDBDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {userAnalytics.slice(0, 10).map((user, index) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div key={user.id || `user-${index}`} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex items-center space-x-4">
                       <Badge variant={index < 3 ? "default" : "secondary"}>
                         #{index + 1}
@@ -362,7 +451,7 @@ export function MongoDBDashboard() {
                           <Badge variant={user.role === 'admin' ? 'destructive' : 'outline'}>
                             {user.role === 'admin' ? '管理员' : '用户'}
                           </Badge>
-                          <span>最爱工具: {user.favoriteTools.slice(0, 2).join(', ')}</span>
+                          <span>最爱工具: {user.favoriteTools && user.favoriteTools.length > 0 ? user.favoriteTools.slice(0, 2).join(', ') : '暂无数据'}</span>
                         </div>
                       </div>
                     </div>
