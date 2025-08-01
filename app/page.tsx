@@ -4,12 +4,14 @@ import { Header } from "@/components/header"
 import { Sidebar } from "@/components/sidebar"
 import { ToolGrid } from "@/components/tool-grid"
 import { StatsCards } from "@/components/stats-cards"
+import { AuthGuard } from "@/components/auth/auth-guard"
 import { useState } from "react"
 
 export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState("全部工具")
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-gray-900 dark:via-gray-800/30 dark:to-gray-900/50">
+    <AuthGuard>
+      <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-gray-900 dark:via-gray-800/30 dark:to-gray-900/50">
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
@@ -63,5 +65,6 @@ export default function HomePage() {
         </main>
       </div>
     </div>
+    </AuthGuard>
   )
 }

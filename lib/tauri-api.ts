@@ -1,135 +1,198 @@
-// Tauri API包装器 - 纯真实数据库连接
-// 移除所有模拟数据，只使用真实的Tauri后端或Next.js API
+// Tauri API包装器 - 真实数据库连接，智能环境检测
+// 支持Tauri桌面环境和Next.js Web环境的真实数据库访问
 
-// 检查是否在Tauri环境中
+// 检查是否在Tauri桌面环境中 - Tauri 2.x优化检测
 export const isTauriEnvironment = () => {
   if (typeof window === 'undefined') return false
 
-  // 检查多种可能的Tauri API位置
   const windowAny = window as any
-  return !!(
+  
+  // 检查协议 - Tauri 2.x支持多种协议
+  const isTauriProtocol = windowAny.location?.protocol === 'tauri:'
+  const isHttpsProtocol = windowAny.location?.protocol === 'https:' && 
+                         windowAny.location?.hostname === 'tauri.localhost'
+  const isHttpProtocol = windowAny.location?.protocol === 'http:' && 
+                        windowAny.location?.hostname === 'tauri.localhost'
+  
+  // 检查Tauri 2.x全局对象
+  const hasTauriGlobal = !!(
     windowAny.__TAURI__ ||
     windowAny.__TAURI_IPC__ ||
-    windowAny.isTauri ||
-    (windowAny.navigator && windowAny.navigator.userAgent && windowAny.navigator.userAgent.includes('Tauri'))
+    windowAny.isTauri
   )
+  
+  // 检查UserAgent中的Tauri标识
+  const hasTauriUserAgent = !!(
+    windowAny.navigator && 
+    windowAny.navigator.userAgent && 
+    windowAny.navigator.userAgent.includes('Tauri')
+  )
+  
+  // 检查是否有Tauri 2.x的invoke函数
+  const hasInvokeFunction = !!(
+    windowAny.__TAURI__?.core?.invoke ||
+    windowAny.__TAURI__?.invoke ||
+    windowAny.invoke
+  )
+  
+  // Tauri 2.x判断逻辑
+  const isTauri = hasTauriGlobal || isTauriProtocol || isHttpsProtocol || isHttpProtocol
+  
+  // 调试日志
+  console.log('🔍 Tauri 2.x环境检测:', {
+    isTauriProtocol,
+    isHttpsProtocol,
+    isHttpProtocol,
+    hasTauriGlobal,
+    hasTauriUserAgent, 
+    hasInvokeFunction,
+    finalResult: isTauri,
+    userAgent: windowAny.navigator?.userAgent,
+    location: windowAny.location?.href,
+    protocol: windowAny.location?.protocol,
+    hostname: windowAny.location?.hostname
+  })
+  
+  return isTauri
 }
 
-// 安全的invoke函数
-export const safeInvoke = async (command: string, args?: any): Promise<any> => {
-  if (!isTauriEnvironment()) {
-    throw new Error('Not in Tauri environment')
-  }
-
-  try {
-    // 尝试多种方式访问Tauri API
-    const windowAny = window as any
-
-    // 方法1: 使用__TAURI__对象
-    if (windowAny.__TAURI__ && windowAny.__TAURI__.tauri && windowAny.__TAURI__.tauri.invoke) {
-      return await windowAny.__TAURI__.tauri.invoke(command, args)
-    }
-
-    // 方法2: 使用__TAURI_IPC__
-    if (windowAny.__TAURI_IPC__ && windowAny.__TAURI_IPC__.invoke) {
-      return await windowAny.__TAURI_IPC__.invoke(command, args)
-    }
-
-    // 方法3: 直接使用invoke
-    if (windowAny.invoke) {
-      return await windowAny.invoke(command, args)
-    }
-
-    throw new Error('Tauri invoke not available')
-  } catch (error) {
-    console.error(`Tauri invoke error for command ${command}:`, error)
-    throw error
-  }
-}
-
-// Next.js API路由调用
-export const callNextjsAPI = async (endpoint: string, data?: any): Promise<any> => {
-  try {
-    const response = await fetch(`/api/${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
+// 深度检查Tauri对象结构
+const inspectTauriStructure = () => {
+  const windowAny = window as any
+  
+  console.log('🔬 深度检查Tauri结构:')
+  
+  if (windowAny.__TAURI__) {
+    const tauriObj = windowAny.__TAURI__
+    console.log('📦 __TAURI__ 对象存在:', {
+      keys: Object.keys(tauriObj),
+      type: typeof tauriObj
     })
+    
+    // 递归检查所有属性
+    Object.keys(tauriObj).forEach(key => {
+      const value = tauriObj[key]
+      console.log(`  📌 __TAURI__.${key}:`, {
+        type: typeof value,
+        isFunction: typeof value === 'function',
+        keys: typeof value === 'object' && value ? Object.keys(value) : null
+      })
+      
+      // 如果是对象，继续检查下一层
+      if (typeof value === 'object' && value) {
+        Object.keys(value).forEach(subKey => {
+          const subValue = value[subKey]
+          console.log(`    🔸 __TAURI__.${key}.${subKey}:`, {
+            type: typeof subValue,
+            isFunction: typeof subValue === 'function'
+          })
+        })
+      }
+    })
+  }
+  
+  // 检查其他可能的Tauri相关对象
+  const possibleTauriObjects = [
+    '__TAURI_IPC__',
+    '__TAURI_INTERNALS__', 
+    '__TAURI_METADATA__',
+    'tauri',
+    'invoke'
+  ]
+  
+  possibleTauriObjects.forEach(objName => {
+    if (windowAny[objName]) {
+      console.log(`📦 ${objName} 存在:`, {
+        type: typeof windowAny[objName],
+        keys: typeof windowAny[objName] === 'object' ? Object.keys(windowAny[objName]) : null
+      })
+    }
+  })
+}
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: response.statusText }))
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+// 安全的invoke函数 - 基于Tauri 2.x最佳实践
+export const safeInvoke = async (command: string, args?: any): Promise<any> => {
+  console.log(`🔧 开始Tauri invoke调用: ${command}`)
+
+  try {
+    // 优先使用官方@tauri-apps/api包
+    if (typeof window !== 'undefined') {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core')
+        console.log(`✅ 使用官方@tauri-apps/api调用: ${command}`)
+        const result = await invoke(command, args)
+        console.log(`✅ Tauri invoke成功 ${command}:`, result)
+        return result
+      } catch (importError) {
+        console.log('📦 @tauri-apps/api导入失败，尝试全局API:', importError)
+      }
     }
 
-    return await response.json()
-  } catch (error) {
-    console.error(`Next.js API error for endpoint ${endpoint}:`, error)
+    // 回退到全局API检查
+    const windowAny = window as any
+    let invokeFunction = null
+    let methodName = ''
+
+    // 按Tauri 2.x优先级顺序检查
+    if (windowAny.__TAURI__?.core?.invoke) {
+      invokeFunction = windowAny.__TAURI__.core.invoke
+      methodName = '__TAURI__.core.invoke'
+    }
+    else if (windowAny.__TAURI__?.invoke) {
+      invokeFunction = windowAny.__TAURI__.invoke
+      methodName = '__TAURI__.invoke'
+    }
+    else if (windowAny.invoke) {
+      invokeFunction = windowAny.invoke
+      methodName = 'window.invoke'
+    }
+
+    if (!invokeFunction) {
+      throw new Error('未找到任何可用的Tauri invoke函数 - 可能不在Tauri环境中')
+    }
+
+    console.log(`📱 使用 ${methodName} 调用: ${command}`)
+    
+    // 调用Tauri命令，确保参数格式正确
+    const result = await invokeFunction(command, args || {})
+    console.log(`✅ Tauri调用成功 ${command}:`, result)
+    return result
+
+  } catch (error: any) {
+    console.error(`❌ Tauri invoke失败 ${command}:`, error)
+    
+    // 提供更详细的错误信息
+    if (error?.message?.includes('missing Origin header')) {
+      console.error('Origin头缺失错误 - 可能是协议配置问题')
+      throw new Error(`IPC调用失败 - Origin头缺失。请检查应用是否正确运行在Tauri协议下。原始错误: ${error.message}`)
+    }
+    
     throw error
   }
 }
 
-// 统一的API调用函数 - 只使用真实数据源
+// 专注于Tauri API - 已移除Next.js和临时会话管理
+
+// 统一的API调用函数 - 专注Tauri API
 export const apiCall = async (command: string, args?: any): Promise<any> => {
   console.log(`🔗 API Call: ${command}`, args)
 
-  // 优先尝试Tauri环境（桌面应用）
-  if (isTauriEnvironment()) {
-    try {
-      console.log(`📱 Using Tauri backend for: ${command}`)
-      const result = await safeInvoke(command, args)
-      console.log(`✅ Tauri success for ${command}:`, result)
-      return result
-    } catch (error) {
-      console.error(`❌ Tauri failed for ${command}:`, error)
-      // 不回退到模拟数据，直接抛出错误
-      throw new Error(`Tauri API调用失败: ${error instanceof Error ? error.message : String(error)}`)
-    }
-  }
+  // 检测当前环境
+  const inTauriEnv = isTauriEnvironment()
+  
+  console.log(`🌍 Environment Detection:`, { 
+    inTauriEnv, 
+    protocol: typeof window !== 'undefined' ? window.location?.protocol : 'server',
+    hostname: typeof window !== 'undefined' ? window.location?.hostname : 'server'
+  })
 
-  // 尝试Next.js API路由（Web环境）
-  try {
-    console.log(`🌐 Using Next.js API for: ${command}`)
-    
-    // 映射命令到API端点
-    const endpointMap: Record<string, string> = {
-      'login': 'auth/login',
-      'logout': 'auth/logout',
-      'check_session': 'auth/session',
-      'get_all_users_admin': 'admin/users',
-      'get_system_overview': 'admin/overview',
-      'track_user_activity': 'auth/activity',
-      'toggle_user_status': 'admin/toggle-user',
-      'delete_user': 'admin/delete-user',
-      'create_user': 'admin/create-user',
-      'edit_user': 'admin/edit-user',
-      'reset_user_password': 'admin/reset-password',
-      'get_admin_logs': 'admin/logs'
-    }
-
-    const endpoint = endpointMap[command]
-    if (!endpoint) {
-      throw new Error(`未知的API命令: ${command}`)
-    }
-
-    const result = await callNextjsAPI(endpoint, args)
-    console.log(`✅ Next.js API success for ${command}:`, result)
-    
-    // 处理Next.js API的响应格式
-    if (command === 'login' && result.user) {
-      return result.user
-    } else if (command === 'get_all_users_admin' && result.users) {
-      return result.users
-    } else if (command === 'get_system_overview' && result.stats) {
-      return result.stats
-    } else if (result.success) {
-      return result
-    }
-    
+  // 只使用Tauri后端
+  if (inTauriEnv) {
+    console.log(`📱 Using Tauri backend for: ${command}`)
+    const result = await safeInvoke(command, args)
+    console.log(`✅ Tauri success for ${command}:`, result)
     return result
-  } catch (error) {
-    console.error(`❌ Next.js API failed for ${command}:`, error)
-    throw new Error(`API调用失败: ${error instanceof Error ? error.message : String(error)}`)
+  } else {
+    throw new Error(`不在Tauri环境中，无法调用命令: ${command}`)
   }
 }

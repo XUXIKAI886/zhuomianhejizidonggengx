@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import { Toaster } from 'sonner'
 import { DevToolsBlocker } from '@/components/dev-tools-blocker'
 import { ThemeProvider } from '@/components/theme-provider'
+import { AuthProvider } from '@/lib/auth/auth-context'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -35,14 +36,16 @@ html {
           enableSystem
           disableTransitionOnChange
         >
-          {/* 暂时禁用安全保护，便于调试 */}
-          {/* <DevToolsBlocker /> */}
-          {children}
-          <Toaster
-            richColors
-            position="top-right"
-            expand={true}
-          />
+          <AuthProvider>
+            {/* 暂时禁用安全保护，便于调试 */}
+            {/* <DevToolsBlocker /> */}
+            {children}
+            <Toaster
+              richColors
+              position="top-right"
+              expand={true}
+            />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

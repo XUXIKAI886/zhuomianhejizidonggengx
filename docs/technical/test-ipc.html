@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tauri IPC 测试</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Tauri IPC 测试页面</h1>
+    <button id="testBtn">测试 IPC 调用</button>
+    <div id="result"></div>
+    
+    <script>
+        // 等待Tauri API加载
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            console.log('当前Origin:', window.location.origin);
+            console.log('当前协议:', window.location.protocol);
+            console.log('Tauri API可用:', typeof window.__TAURI__ !== 'undefined');
+            
+            document.getElementById('testBtn').addEventListener('click', async function() {
+                const resultDiv = document.getElementById('result');
+                
+                try {
+                    if (typeof window.__TAURI__ === 'undefined') {
+                        throw new Error('Tauri API未加载');
+                    }
+                    
+                    console.log('开始测试IPC调用...');
+                    
+                    // 测试简单的调试信息命令
+                    const result = await window.__TAURI__.core.invoke('get_debug_info');
+                    resultDiv.innerHTML = `<p style="color: green;">成功: ${result}</p>`;
+                    console.log('IPC调用成功:', result);
+                    
+                } catch (error) {
+                    console.error('IPC调用失败:', error);
+                    resultDiv.innerHTML = `<p style="color: red;">错误: ${error.message}</p>`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

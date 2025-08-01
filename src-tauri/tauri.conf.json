@@ -1,11 +1,12 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "csch",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "identifier": "com.chengshangcehua.tools",
   "build": {
     "frontendDist": "../out",
-    "beforeDevCommand": "npm run build",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
   "app": {
@@ -24,12 +25,12 @@
         "skipTaskbar": false,
         "theme": "Light",
         "devtools": true,
-        "additionalBrowserArgs": "--enable-features=VaapiVideoDecoder --disable-web-security --disable-features=VizDisplayCompositor"
+        "additionalBrowserArgs": "--enable-features=VaapiVideoDecoder --disable-features=VizDisplayCompositor"
       }
     ],
     "security": {
-      "csp": null,
-      "dangerousDisableAssetCspModification": true
+      "csp": "default-src 'self' tauri: asset: http://localhost:3000 ipc: https://ipc.localhost; img-src 'self' asset: data: http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost ws://localhost:3000 http://localhost:3000 https: tauri:;",
+      "capabilities": ["main-capability"]
     },
     "withGlobalTauri": true
   },

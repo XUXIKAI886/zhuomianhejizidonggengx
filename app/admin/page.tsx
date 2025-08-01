@@ -18,6 +18,7 @@ import { MoreHorizontal, UserPlus, Edit, Trash2, RotateCcw, Users, Activity, Tre
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { apiCall } from '@/lib/tauri-api'
+import { MongoDBDashboard } from '@/components/admin/mongodb-dashboard'
 
 // 类型定义
 interface AdminUser {
@@ -89,7 +90,7 @@ export default function AdminPage() {
 
   const handleToggleUserStatus = async (userId: string, isActive: boolean) => {
     try {
-      await apiCall('toggle_user_status', { userId, isActive })
+      await apiCall('toggle_user_status', { userId })
       toast.success(isActive ? '用户已启用' : '用户已禁用')
 
       // 在开发模式下直接更新本地状态，避免重新加载
@@ -299,6 +300,7 @@ export default function AdminPage() {
             <Tabs defaultValue="users" className="space-y-4">
               <TabsList className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
                 <TabsTrigger value="users">用户管理</TabsTrigger>
+                <TabsTrigger value="analytics">MongoDB 分析</TabsTrigger>
                 <TabsTrigger value="statistics">数据统计</TabsTrigger>
                 <TabsTrigger value="tools">工具分析</TabsTrigger>
               </TabsList>
@@ -407,6 +409,10 @@ export default function AdminPage() {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="analytics" className="space-y-4">
+                <MongoDBDashboard />
               </TabsContent>
 
               <TabsContent value="statistics" className="space-y-4">

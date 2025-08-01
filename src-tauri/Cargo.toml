@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.1.0"
+version = "1.0.17"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
@@ -27,3 +27,10 @@ tauri-plugin-shell = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 tauri-plugin-app = { version = "2.0.0-alpha.2" }
+
+# 认证系统依赖
+mongodb = "3.0"
+sha2 = "0.10"
+tokio = { version = "1.0", features = ["full"] }
+uuid = { version = "1.0", features = ["v4"] }
+futures = "0.3"

@@ -23,6 +23,28 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.17",
+    date: "2025-08-01",
+    type: "minor",
+    title: "🔍 企业级MongoDB管理系统 - 详细日志监控版本",
+    description: "实现企业级MongoDB管理系统，新增用户管理详细日志记录功能。提供完整的用户操作追踪、权限监控和数据变化记录，大幅提升系统可维护性和安全审计能力。",
+    features: [
+      { icon: "sparkles", text: "企业级MongoDB数据分析仪表板", highlight: true },
+      { icon: "shield", text: "详细用户管理操作日志记录", highlight: true },
+      { icon: "users", text: "完整的用户CRUD操作权限管理" },
+      { icon: "zap", text: "实时数据可视化和统计分析" },
+      { icon: "settings", text: "MongoDB聚合管道高级查询" },
+      { icon: "bug", text: "修复参数命名和序列化问题" },
+      { icon: "file", text: "完善的技术文档和操作手册" },
+      { icon: "globe", text: "优化系统性能和用户体验" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.17",
+    releaseNotes: "MongoDB管理系统与详细日志监控功能发布",
+    breaking: false,
+    security: true
+  },
+  {
     version: "1.0.16",
     date: "2025-07-31",
     type: "minor",

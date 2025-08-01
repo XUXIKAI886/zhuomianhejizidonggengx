@@ -1,5 +1,7 @@
 use tauri::Manager;
 
+mod auth;
+
 // 添加调试信息命令
 #[tauri::command]
 async fn open_devtools() -> Result<String, String> {
@@ -59,6 +61,13 @@ async fn open_url(url: String) -> Result<String, String> {
 pub fn run() {
   tauri::Builder::default()
     .setup(|app| {
+      // 初始化MongoDB连接和应用状态
+      let app_state = tauri::async_runtime::block_on(async {
+        auth::AppState::new().await
+      }).expect("Failed to initialize app state");
+
+      app.manage(app_state);
+
       // 强制启用日志插件，便于调试
       app.handle().plugin(
         tauri_plugin_log::Builder::default()
@@ -75,6 +84,10 @@ pub fn run() {
 
         println!("桌面应用窗口已显示并置于前台");
         println!("开发者工具可通过F12或右键菜单打开");
+        println!("MongoDB认证系统已初始化");
+        println!("前端构建目录: ../out");
+        println!("应用启动完成！");
+        println!("用户状态管理已优化！");
       }
 
       Ok(())
@@ -83,7 +96,24 @@ pub fn run() {
     .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(tauri_plugin_process::init())
     .plugin(tauri_plugin_app::init())
-    .invoke_handler(tauri::generate_handler![open_devtools, get_debug_info, open_url])
+    .invoke_handler(tauri::generate_handler![
+      open_devtools,
+      get_debug_info,
+      open_url,
+      auth::login,
+      auth::logout,
+      auth::check_session,
+      auth::get_all_users_admin,
+      auth::get_system_overview,
+      auth::track_user_activity,
+      auth::get_user_analytics,
+      auth::get_system_analytics,
+      auth::create_user,
+      auth::edit_user,
+      auth::delete_user,
+      auth::reset_user_password,
+      auth::toggle_user_status
+    ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

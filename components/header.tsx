@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Settings, Moon, Sun, User, Bell, Maximize2 } from "lucide-react"
+import { Search, Settings, Moon, Sun, User, Bell, Maximize2, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -14,11 +14,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { UpdateChecker } from "./update-checker"
 import { VersionNotifications } from "./version-notifications"
+import { useAuth } from "@/lib/auth/auth-context"
 
 export function Header() {
   const { theme, setTheme } = useTheme()
+  const { state, logout } = useAuth()
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
 
   // 避免水合不匹配
@@ -28,6 +32,16 @@ export function Header() {
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark')
+  }
+
+  const handleLogout = async () => {
+    await logout()
+    router.push('/login')
+  }
+
+  // 获取用户名首字母作为头像
+  const getUserInitials = (username: string) => {
+    return username.charAt(0).toUpperCase()
   }
 
   return (
@@ -106,7 +120,9 @@ export function Header() {
                       <AvatarImage src="/user-avatar.svg" alt="用户头像" className="object-cover" />
                       <AvatarFallback className="bg-gradient-to-br from-blue-300 via-purple-300 to-indigo-400 text-white font-bold text-sm shadow-inner">
                         <div className="flex items-center justify-center w-full h-full">
-                          <span className="drop-shadow-sm">呈</span>
+                          <span className="drop-shadow-sm">
+                            {state.user ? getUserInitials(state.user.username) : '呈'}
+                          </span>
                         </div>
                       </AvatarFallback>
                     </Avatar>
@@ -118,13 +134,19 @@ export function Header() {
                       <AvatarImage src="/user-avatar.svg" alt="用户头像" className="object-cover" />
                       <AvatarFallback className="bg-gradient-to-br from-blue-300 via-purple-300 to-indigo-400 text-white font-bold shadow-inner">
                         <div className="flex items-center justify-center w-full h-full">
-                          <span className="drop-shadow-sm">呈</span>
+                          <span className="drop-shadow-sm">
+                            {state.user ? getUserInitials(state.user.username) : '呈'}
+                          </span>
                         </div>
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100">张三</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">专业版用户</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
+                        {state.user?.username || '未登录'}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {state.user?.role === 'admin' ? '管理员' : '普通用户'}
+                      </p>
                     </div>
                   </div>
                   <DropdownMenuItem className="rounded-lg">
@@ -135,8 +157,24 @@ export function Header() {
                     <Settings className="mr-3 h-4 w-4" />
                     <span>偏好设置</span>
                   </DropdownMenuItem>
+                  {state.user?.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="rounded-lg"
+                        onClick={() => router.push('/admin')}
+                      >
+                        <Settings className="mr-3 h-4 w-4" />
+                        <span>后台管理</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="rounded-lg text-rose-400 dark:text-rose-400 focus:text-rose-400 dark:focus:text-rose-400">
+                  <DropdownMenuItem
+                    className="rounded-lg text-rose-400 dark:text-rose-400 focus:text-rose-400 dark:focus:text-rose-400"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-3 h-4 w-4" />
                     <span>退出登录</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
