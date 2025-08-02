@@ -38,6 +38,22 @@ const config: Config = {
     'text-emerald-400',
     'text-rose-500',
     'text-rose-400',
+    // 登录页面关键样式
+    'from-blue-600',
+    'via-purple-600',
+    'to-purple-800',
+    'bg-gradient-to-br',
+    'bg-white/20',
+    'text-white/80',
+    'text-white/90',
+    'backdrop-blur-sm',
+    'border-white/20',
+    'bg-gray-50',
+    'dark:bg-gray-900',
+    'lg:w-1/2',
+    'w-full',
+    'hidden',
+    'lg:flex',
   ],
   theme: {
   	extend: {

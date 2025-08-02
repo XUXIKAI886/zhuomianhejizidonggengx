@@ -30,6 +30,15 @@ export default function LoginPage() {
   const { state, login, clearError } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
 
+  // 确保样式正确加载
+  useEffect(() => {
+    // 强制重新渲染以确保Tailwind样式加载
+    const timer = setTimeout(() => {
+      document.body.classList.add('login-page-loaded')
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [])
+
   // 表单配置
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -95,9 +104,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex" style={{ minHeight: '100vh', display: 'flex' }}>
       {/* 左侧欢迎区域 - 参考截图的渐变背景设计 */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-purple-600 to-purple-800 relative overflow-hidden">
+      <div
+        className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-purple-600 to-purple-800 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(to bottom right, #2563eb, #9333ea, #7c3aed)',
+          position: 'relative',
+          overflow: 'hidden',
+          width: '50%',
+          display: 'flex'
+        }}
+      >
         {/* 装饰性圆圈 - 参考截图风格 */}
         <div className="absolute top-20 left-20 w-32 h-32 border border-white/20 rounded-full"></div>
         <div className="absolute top-40 right-32 w-24 h-24 border border-white/20 rounded-full"></div>

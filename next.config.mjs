@@ -5,6 +5,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // 确保CSS正确加载
+  assetPrefix: '',
+  basePath: '',
   eslint: {
     ignoreDuringBuilds: true,
   },

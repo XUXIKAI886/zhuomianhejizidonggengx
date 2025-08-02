@@ -1,0 +1,20 @@
+$headers = @{
+    "Authorization" = "Bearer chengshang-admin-token-2025-secure-update-server-key"
+    "Content-Type" = "application/json; charset=utf-8"
+}
+
+$body = @{
+    target = "windows-x86_64"
+    version = "1.0.18"
+    notes = "Token Authentication System Upgrade`n`nMain Features:`n• JWT Security Authentication`n• Remember Me (30 days)`n• Auto Login (7 days)`n• Smart Session Recovery`n• Cross-device Sync Management`n• Login Interface Optimization"
+    signature = "dW50cnVzdGVkIGNvbW1lbnQ6IHJzdCBzaWduaW5nIGNyeXB0b2dyYXBoaWNhbGx5IHNlY3VyZSBzaWduYXR1cmVzIGFyZSBhdmFpbGFibGUgZm9yIGluc3RhbGxpbmdcblJXU0JBSG9yOEJlSkcxZ3pPdmJTZ2VoZTE2amQ2"
+    url = "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v1.0.18/csch_1.0.18_x64-setup.exe"
+} | ConvertTo-Json
+
+try {
+    $response = Invoke-RestMethod -Uri "https://www.yujinkeji.asia/api/releases" -Method POST -Headers $headers -Body $body
+    Write-Host "✅ 服务器配置成功" -ForegroundColor Green
+    Write-Host $response
+} catch {
+    Write-Host "❌ 服务器配置失败: $($_.Exception.Message)" -ForegroundColor Red
+}

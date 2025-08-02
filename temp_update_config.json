@@ -1,0 +1,7 @@
+{
+  "target": "windows-x86_64",
+  "version": "1.0.18",
+  "notes": "Token认证系统升级\n\n主要功能:\n• JWT安全认证\n• 记住我功能(30天)\n• 自动登录功能(7天)\n• 智能会话恢复\n• 跨设备同步管理\n• 登录界面优化",
+  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHJzdCBzaWduaW5nIGNyeXB0b2dyYXBoaWNhbGx5IHNlY3VyZSBzaWduYXR1cmVzIGFyZSBhdmFpbGFibGUgZm9yIGluc3RhbGxpbmdcblJXU0JBSG9yOEJlSkcxZ3pPdmJTZ2VoZTE2amQ2",
+  "url": "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v1.0.18/csch_1.0.18_x64-setup.exe"
+}
