@@ -91,9 +91,9 @@ export function Sidebar({ activeCategory, onCategoryChange }: SidebarProps) {
           })}
         </div>
 
-        {/* 宜昌天气预览 */}
+        {/* 今日宜昌天气预览 */}
         <div className="mt-8 p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">宜昌天气</h3>
+          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">今日宜昌天气</h3>
           <WeatherWidget />
         </div>
       </div>

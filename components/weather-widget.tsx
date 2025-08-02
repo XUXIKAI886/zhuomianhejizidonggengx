@@ -96,10 +96,10 @@ export function WeatherWidget() {
   // 组件挂载时获取天气数据
   useEffect(() => {
     fetchWeather()
-    
-    // 每30分钟自动刷新一次
-    const interval = setInterval(fetchWeather, 30 * 60 * 1000)
-    
+
+    // 每1小时自动刷新一次
+    const interval = setInterval(fetchWeather, 60 * 60 * 1000)
+
     return () => clearInterval(interval)
   }, [])
 
@@ -113,7 +113,7 @@ export function WeatherWidget() {
 
   if (loading && !weather) {
     return (
-      <div className="flex items-center justify-center py-4">
+      <div className="flex items-center justify-center py-6">
         <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
         <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">加载中...</span>
       </div>
@@ -122,8 +122,8 @@ export function WeatherWidget() {
 
   if (error && !weather) {
     return (
-      <div className="space-y-2">
-        <div className="text-sm text-red-500 dark:text-red-400">
+      <div className="text-center py-4">
+        <div className="text-sm text-red-500 dark:text-red-400 mb-2">
           {error}
         </div>
         <Button
@@ -131,7 +131,7 @@ export function WeatherWidget() {
           size="sm"
           onClick={fetchWeather}
           disabled={loading}
-          className="w-full text-xs h-7"
+          className="text-xs h-7 px-3"
         >
           <RefreshCw className={`w-3 h-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
           重试
@@ -142,20 +142,20 @@ export function WeatherWidget() {
 
   if (!weather) {
     return (
-      <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+      <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">
         暂无天气数据
       </div>
     )
   }
 
   return (
-    <div className="space-y-3">
-      {/* 主要天气信息 */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+    <div className="space-y-4">
+      {/* 主要天气信息 - 重新设计布局 */}
+      <div className="flex items-start justify-between">
+        <div className="flex items-center space-x-3">
           {getWeatherIcon(weather.weather)}
           <div>
-            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
               {weather.weather}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -164,42 +164,33 @@ export function WeatherWidget() {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
+          <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {weather.temperature}°C
           </div>
         </div>
       </div>
 
-      {/* 详细信息 */}
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="flex items-center space-x-1">
-          <Wind className="w-3 h-3 text-gray-400" />
-          <span className="text-gray-600 dark:text-gray-300">
-            {weather.winddirection} {weather.windpower}级
+      {/* 详细信息 - 改为垂直布局 */}
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2">
+          <Wind className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            {weather.winddirection}风 {weather.windpower}级
           </span>
         </div>
-        <div className="flex items-center space-x-1">
-          <Droplets className="w-3 h-3 text-blue-400" />
-          <span className="text-gray-600 dark:text-gray-300">
+        <div className="flex items-center space-x-2">
+          <Droplets className="w-4 h-4 text-blue-400" />
+          <span className="text-sm text-gray-600 dark:text-gray-300">
             湿度 {weather.humidity}%
           </span>
         </div>
       </div>
 
-      {/* 更新时间和刷新按钮 */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-        <div className="text-xs text-gray-500 dark:text-gray-400">
+      {/* 更新时间 - 移除刷新按钮 */}
+      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
           {lastUpdate ? `更新于 ${formatUpdateTime(lastUpdate)}` : ''}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={fetchWeather}
-          disabled={loading}
-          className="h-6 px-2 text-xs hover:bg-blue-50 dark:hover:bg-blue-900/20"
-        >
-          <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-        </Button>
       </div>
     </div>
   )
