@@ -4,6 +4,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Layers, TrendingUp, Palette, ShoppingCart, Users, MessageCircle, Star, Zap } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { WeatherWidget } from "@/components/weather-widget"
 
 const categories = [
   { id: "all", name: "全部工具", icon: Layers, count: 19, color: "from-gray-300 to-gray-400" },
@@ -90,20 +91,10 @@ export function Sidebar({ activeCategory, onCategoryChange }: SidebarProps) {
           })}
         </div>
 
-        {/* Quick Actions */}
+        {/* 宜昌天气预览 */}
         <div className="mt-8 p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">快速操作</h3>
-          <div className="space-y-2">
-            <button className="w-full text-left text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              📊 查看使用统计
-            </button>
-            <button className="w-full text-left text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              ⭐ 我的收藏
-            </button>
-            <button className="w-full text-left text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              🔄 最近使用
-            </button>
-          </div>
+          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">宜昌天气</h3>
+          <WeatherWidget />
         </div>
       </div>
     </aside>
