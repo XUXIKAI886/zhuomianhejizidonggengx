@@ -23,6 +23,23 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.20",
+    date: "2025-08-02",
+    type: "patch",
+    title: "🔧 天气API修复版本 - 生产环境网络问题解决",
+    description: "紧急修复V1.0.19生产环境中天气组件网络请求失败的问题。通过添加Tauri HTTP插件和配置URL作用域，确保天气功能在所有环境下正常工作。",
+    features: [
+      { icon: "shield", text: "修复生产环境天气API调用失败问题", highlight: true },
+      { icon: "zap", text: "添加Tauri HTTP插件支持" },
+      { icon: "settings", text: "配置高德API URL作用域权限" },
+      { icon: "globe", text: "双环境HTTP客户端自动切换" },
+      { icon: "sparkles", text: "完善错误处理和日志记录" },
+      { icon: "users", text: "保持开发环境JSONP兼容性" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.20"
+  },
+  {
     version: "1.0.19",
     date: "2025-08-02",
     type: "minor",
@@ -36,7 +53,7 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "shield", text: "高德地图API集成 - 权威数据源" },
       { icon: "users", text: "自动更新机制 - 每小时刷新" }
     ],
-    isNew: true,
+    isNew: false,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.19"
   },
   {
