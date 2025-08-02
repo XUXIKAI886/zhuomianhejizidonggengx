@@ -36,7 +36,7 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "sparkles", text: "开发和生产环境完全兼容" },
       { icon: "users", text: "天气组件功能完全正常" }
     ],
-    isNew: true,
+    isNew: false,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.21"
   },
   {

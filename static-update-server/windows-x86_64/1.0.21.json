@@ -1,0 +1,6 @@
+{
+  "version": "1.0.21",
+  "notes": "• 天气API最终修复版本\n• 完善Tauri HTTP权限配置\n• 修复JSON配置语法错误\n• 独立HTTP capability配置文件\n• 正确的URL作用域权限设置\n• 开发和生产环境完全兼容\n• 天气组件功能完全正常",
+  "pub_date": "2025-08-02T12:00:00.000Z",
+  "platforms": {}
+}
