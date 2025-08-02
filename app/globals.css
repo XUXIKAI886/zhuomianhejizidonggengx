@@ -128,3 +128,68 @@ body {
   width: 98vw !important;
   height: 98vh !important;
 }
+
+/* 高端工具卡片悬停效果 */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 工具卡片增强效果 */
+.tool-card-enhanced {
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.tool-card-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tool-card-enhanced:hover::before {
+  transform: translateX(100%);
+}
+
+/* 性能优化 */
+.tool-card-enhanced,
+.tool-card-enhanced * {
+  will-change: transform, opacity, box-shadow;
+}
+
+/* 减少重绘 */
+.tool-card-enhanced {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}

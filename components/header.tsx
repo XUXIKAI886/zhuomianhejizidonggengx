@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Settings, Moon, Sun, User, Bell, Maximize2, LogOut, UserCircle } from "lucide-react"
+import { Search, Settings, Moon, Sun, User, Bell, LogOut, UserCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -99,12 +99,6 @@ export function Header() {
                 ) : (
                   <Moon className="w-5 h-5" />
                 )}
-              </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl">
-                <Maximize2 className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl">
-                <Settings className="w-5 h-5" />
               </Button>
 
               <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2"></div>

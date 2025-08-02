@@ -141,7 +141,7 @@ export default function LoginPage() {
           
           {/* 描述文字 */}
           <p className="text-white/80 text-lg leading-relaxed max-w-md">
-            呈尚策划精心打造的专业工具集合平台，汇聚运营、美工、销售等各岗位实用工具，持续更新迭代，助力团队高效协作。
+            专业工具集合平台，助力团队高效协作
           </p>
         </div>
       </div>
