@@ -23,6 +23,23 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.19",
+    date: "2025-08-02",
+    type: "minor",
+    title: "🌤️ 宜昌天气预览 - 企业级界面优化版本",
+    description: "全新宜昌天气预览功能替换快速操作，提供实时天气信息。同时优化工具卡片悬停效果，采用企业级专业设计标准，提升整体用户体验和界面美观度。",
+    features: [
+      { icon: "sparkles", text: "宜昌天气预览组件 - 实时天气信息", highlight: true },
+      { icon: "zap", text: "企业级工具卡片悬停效果优化" },
+      { icon: "settings", text: "天气API跨域问题修复 - JSONP方案" },
+      { icon: "globe", text: "天气组件布局优化 - 专业排版设计" },
+      { icon: "shield", text: "高德地图API集成 - 权威数据源" },
+      { icon: "users", text: "自动更新机制 - 每小时刷新" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.19"
+  },
+  {
     version: "1.0.18",
     date: "2025-08-01",
     type: "minor",
