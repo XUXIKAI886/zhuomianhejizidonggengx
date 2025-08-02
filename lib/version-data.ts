@@ -23,6 +23,23 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.21",
+    date: "2025-08-02",
+    type: "patch",
+    title: "🔧 天气API最终修复版本 - HTTP权限配置完善",
+    description: "最终解决天气组件网络请求问题。通过正确配置Tauri HTTP权限和作用域，确保天气功能在开发和生产环境下都能正常工作。",
+    features: [
+      { icon: "shield", text: "完善Tauri HTTP权限配置", highlight: true },
+      { icon: "zap", text: "修复JSON配置语法错误" },
+      { icon: "settings", text: "独立HTTP capability配置文件" },
+      { icon: "globe", text: "正确的URL作用域权限设置" },
+      { icon: "sparkles", text: "开发和生产环境完全兼容" },
+      { icon: "users", text: "天气组件功能完全正常" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.21"
+  },
+  {
     version: "1.0.20",
     date: "2025-08-02",
     type: "patch",
@@ -36,7 +53,7 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "sparkles", text: "完善错误处理和日志记录" },
       { icon: "users", text: "保持开发环境JSONP兼容性" }
     ],
-    isNew: true,
+    isNew: false,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.20"
   },
   {

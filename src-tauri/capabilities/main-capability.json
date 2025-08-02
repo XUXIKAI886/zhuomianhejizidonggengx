@@ -30,8 +30,6 @@
     "core:resources:default",
     "shell:default",
     "shell:allow-open",
-    "http:default",
-    "http:allow-fetch",
     "updater:default",
     "updater:allow-check",
     "updater:allow-download-and-install"
