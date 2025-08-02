@@ -5,6 +5,9 @@ import { Cloud, Sun, CloudRain, CloudSnow, Wind, Droplets, RefreshCw } from "luc
 import { Button } from "@/components/ui/button"
 import { WeatherData, WeatherResponse, CITY_CODES } from "@/types/weather"
 
+// 高德地图API密钥
+const AMAP_KEY = "634a7d92f531b9d9f0791b8c82b90fee"
+
 // 天气图标映射
 const getWeatherIcon = (weather: string) => {
   if (weather.includes('晴')) return <Sun className="w-5 h-5 text-yellow-500" />
@@ -23,34 +26,67 @@ export function WeatherWidget() {
   const fetchWeather = async () => {
     setLoading(true)
     setError(null)
-    
+
     try {
-      const response = await fetch(
-        `/api/weather?city=${CITY_CODES.YICHANG}&extensions=base`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      console.log('开始获取天气数据...')
+
+      // 使用JSONP方式调用高德API避免跨域问题
+      const callbackName = `weatherCallback_${Date.now()}`
+      const apiUrl = `https://restapi.amap.com/v3/weather/weatherInfo?city=${CITY_CODES.YICHANG}&key=${AMAP_KEY}&extensions=base&callback=${callbackName}`
+
+      console.log('调用高德API:', apiUrl)
+
+      // 创建Promise来处理JSONP回调
+      const data: WeatherResponse = await new Promise((resolve, reject) => {
+        // 设置超时
+        const timeout = setTimeout(() => {
+          cleanup()
+          reject(new Error('请求超时'))
+        }, 10000)
+
+        // 定义全局回调函数
+        ;(window as any)[callbackName] = (response: WeatherResponse) => {
+          cleanup()
+          resolve(response)
         }
-      )
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      const data: WeatherResponse = await response.json()
-      
+
+        // 创建script标签
+        const script = document.createElement('script')
+        script.src = apiUrl
+        script.onerror = () => {
+          cleanup()
+          reject(new Error('网络请求失败'))
+        }
+
+        // 清理函数
+        const cleanup = () => {
+          clearTimeout(timeout)
+          if ((window as any)[callbackName]) {
+            delete (window as any)[callbackName]
+          }
+          if (script.parentNode) {
+            script.parentNode.removeChild(script)
+          }
+        }
+
+        // 添加到页面
+        document.head.appendChild(script)
+      })
+
+      console.log('收到天气数据:', data)
+
       if (data.status === '1' && data.lives && data.lives.length > 0) {
         setWeather(data.lives[0])
         setLastUpdate(new Date())
         setError(null)
+        console.log('天气数据更新成功:', data.lives[0])
       } else {
         throw new Error(data.info || '获取天气数据失败')
       }
     } catch (err) {
       console.error('获取天气失败:', err)
-      setError(err instanceof Error ? err.message : '网络连接失败')
+      const errorMessage = err instanceof Error ? err.message : '网络连接失败'
+      setError(errorMessage)
       setWeather(null)
     } finally {
       setLoading(false)
