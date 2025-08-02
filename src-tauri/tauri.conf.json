@@ -29,7 +29,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' tauri: asset: http://localhost:3000 ipc: https://ipc.localhost; img-src 'self' asset: data: http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost ws://localhost:3000 http://localhost:3000 https: tauri:;",
+      "csp": "default-src 'self' tauri: asset: http://localhost:3000 ipc: https://ipc.localhost; img-src 'self' asset: data: http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost ws://localhost:3000 http://localhost:3000 https: tauri:; frame-src 'self' https: http: data:;",
       "capabilities": ["main-capability"]
     },
     "withGlobalTauri": true

@@ -285,7 +285,8 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
             onLoad={handleIframeLoad}
             onError={handleIframeError}
             referrerPolicy="no-referrer-when-downgrade"
-            allow="*"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation"
+            allow="accelerometer; autoplay; camera; clipboard-read; clipboard-write; encrypted-media; fullscreen; geolocation; gyroscope; magnetometer; microphone; midi; payment; picture-in-picture; publickey-credentials-get; screen-wake-lock; web-share"
             allowFullScreen
             style={{
               border: 'none',
