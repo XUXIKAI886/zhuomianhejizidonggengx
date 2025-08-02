@@ -41,6 +41,11 @@
       ],
       "dialog": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IHJzdCBzaWduaW5nIGNyeXB0b2dyYXBoaWNhbGx5IHNlY3VyZSBzaWduYXR1cmVzIGFyZSBhdmFpbGFibGUgZm9yIGluc3RhbGxpbmdcblJXU0JBSG9yOEJlSkcxZ3pPdmJTZ2VoZTE2amQ2"
+    },
+    "http": {
+      "scope": [
+        "https://restapi.amap.com/v3/weather/*"
+      ]
     }
   },
   "bundle": {

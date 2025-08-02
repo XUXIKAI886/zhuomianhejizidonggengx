@@ -8,6 +8,9 @@ import { WeatherData, WeatherResponse, CITY_CODES } from "@/types/weather"
 // 高德地图API密钥
 const AMAP_KEY = "634a7d92f531b9d9f0791b8c82b90fee"
 
+// 检测是否在Tauri环境中
+const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__
+
 // 天气图标映射
 const getWeatherIcon = (weather: string) => {
   if (weather.includes('晴')) return <Sun className="w-5 h-5 text-yellow-500" />
@@ -30,48 +33,65 @@ export function WeatherWidget() {
     try {
       console.log('开始获取天气数据...')
 
-      // 使用JSONP方式调用高德API避免跨域问题
-      const callbackName = `weatherCallback_${Date.now()}`
-      const apiUrl = `https://restapi.amap.com/v3/weather/weatherInfo?city=${CITY_CODES.YICHANG}&key=${AMAP_KEY}&extensions=base&callback=${callbackName}`
-
+      const apiUrl = `https://restapi.amap.com/v3/weather/weatherInfo?city=${CITY_CODES.YICHANG}&key=${AMAP_KEY}&extensions=base`
       console.log('调用高德API:', apiUrl)
 
-      // 创建Promise来处理JSONP回调
-      const data: WeatherResponse = await new Promise((resolve, reject) => {
-        // 设置超时
-        const timeout = setTimeout(() => {
-          cleanup()
-          reject(new Error('请求超时'))
-        }, 10000)
+      let data: WeatherResponse
 
-        // 定义全局回调函数
-        ;(window as any)[callbackName] = (response: WeatherResponse) => {
-          cleanup()
-          resolve(response)
+      if (isTauri) {
+        // 在Tauri环境中使用HTTP插件
+        console.log('使用Tauri HTTP客户端')
+        const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http')
+
+        const response = await tauriFetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
 
-        // 创建script标签
-        const script = document.createElement('script')
-        script.src = apiUrl
-        script.onerror = () => {
-          cleanup()
-          reject(new Error('网络请求失败'))
-        }
+        data = await response.json()
+      } else {
+        // 在开发环境中使用JSONP方式
+        console.log('使用JSONP方式')
+        const callbackName = `weatherCallback_${Date.now()}`
+        const jsonpUrl = `${apiUrl}&callback=${callbackName}`
 
-        // 清理函数
-        const cleanup = () => {
-          clearTimeout(timeout)
-          if ((window as any)[callbackName]) {
-            delete (window as any)[callbackName]
+        data = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            cleanup()
+            reject(new Error('请求超时'))
+          }, 10000)
+
+          ;(window as any)[callbackName] = (response: WeatherResponse) => {
+            cleanup()
+            resolve(response)
           }
-          if (script.parentNode) {
-            script.parentNode.removeChild(script)
-          }
-        }
 
-        // 添加到页面
-        document.head.appendChild(script)
-      })
+          const script = document.createElement('script')
+          script.src = jsonpUrl
+          script.onerror = () => {
+            cleanup()
+            reject(new Error('网络请求失败'))
+          }
+
+          const cleanup = () => {
+            clearTimeout(timeout)
+            if ((window as any)[callbackName]) {
+              delete (window as any)[callbackName]
+            }
+            if (script.parentNode) {
+              script.parentNode.removeChild(script)
+            }
+          }
+
+          document.head.appendChild(script)
+        })
+      }
 
       console.log('收到天气数据:', data)
 
