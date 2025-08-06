@@ -57,35 +57,13 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
   const [hasError, setHasError] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(true)
   const [startTime, setStartTime] = useState<number | null>(null)
-  const [frameError, setFrameError] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen && tool) {
       setIsLoading(true)
       setHasError(false)
-      setFrameError(null)
       setIsFullscreen(true) // 每次打开工具时默认最大化
       setStartTime(Date.now()) // 记录开始时间
-
-      // 检测X-Frame-Options错误
-      const checkFrameError = () => {
-        const iframe = document.getElementById('webview-iframe') as HTMLIFrameElement
-        if (iframe) {
-          try {
-            // 尝试访问iframe内容，如果被X-Frame-Options阻止会抛出错误
-            iframe.contentWindow?.location.href
-          } catch (error) {
-            console.error('Frame access error:', error)
-            setFrameError('该网站不允许在框架中显示')
-            setHasError(true)
-            setIsLoading(false)
-          }
-        }
-      }
-
-      // 延迟检查，给iframe时间加载
-      const timer = setTimeout(checkFrameError, 3000)
-      return () => clearTimeout(timer)
     }
   }, [isOpen, tool])
 
@@ -284,38 +262,15 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
               <div className="text-center max-w-md">
                 <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  无法在应用内显示
+                  无法加载工具
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  {frameError || "该工具不支持在应用内显示，这通常是由于网站的安全策略限制。"}
+                  该工具可能不支持在应用内显示，或者网络连接存在问题。
                 </p>
                 <div className="space-y-2">
-                  <Button
-                    onClick={async () => {
-                      try {
-                        // 使用Tauri打开外部浏览器
-                        const { invoke } = await import('@tauri-apps/api/core')
-                        await invoke('open_url', { url: tool.url })
-                        toast.success('已在外部浏览器中打开工具')
-                        onClose()
-                      } catch (error) {
-                        console.error('打开外部浏览器失败:', error)
-                        // 降级到window.open
-                        window.open(tool.url, '_blank')
-                        toast.success('已在外部浏览器中打开工具')
-                        onClose()
-                      }
-                    }}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    在外部浏览器中打开
-                  </Button>
-                  <Button onClick={handleRefresh} variant="outline" className="w-full">
+                  <Button onClick={handleRefresh} className="w-full">
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    重新尝试
+                    重新加载
                   </Button>
                 </div>
               </div>
