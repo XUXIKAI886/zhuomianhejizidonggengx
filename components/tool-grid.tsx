@@ -118,7 +118,7 @@ export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGr
                   <Icon className="w-7 h-7 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200 ease-out">
+                  <CardTitle className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200 ease-out line-clamp-2 h-14 flex items-center">
                     {tool.name}
                   </CardTitle>
                   <div className="flex items-center space-x-2 mt-2">
@@ -132,14 +132,14 @@ export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGr
             </CardHeader>
 
             <CardContent className="relative pt-0 space-y-4">
-              <CardDescription className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors duration-200 ease-out">
+              <CardDescription className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2 h-10 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors duration-200 ease-out">
                 {tool.description}
               </CardDescription>
 
               {/* Stats - 已移除评分和下载量 */}
 
               {/* Tags */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 h-8 items-start overflow-hidden">
                 {tool.tags.slice(0, 3).map((tag) => (
                   <Badge
                     key={tag}
