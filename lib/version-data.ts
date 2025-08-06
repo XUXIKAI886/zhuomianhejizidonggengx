@@ -23,6 +23,22 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.22",
+    date: "2025-08-06",
+    type: "minor",
+    title: "🎯 新增第20个工具 - 外卖数周报系统（升级版）",
+    description: "新增专业的外卖数周报系统，支持输入店铺数据自动生成专业运营分析报告。进一步完善运营工具生态，为运营团队提供更强大的数据分析能力。",
+    features: [
+      { icon: "sparkles", text: "新增外卖数周报系统（升级版）", highlight: true },
+      { icon: "zap", text: "自动生成专业运营分析报告" },
+      { icon: "file", text: "支持店铺数据输入和处理" },
+      { icon: "settings", text: "运营工具总数扩展至20个" },
+      { icon: "globe", text: "完善的工具生态系统" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.22"
+  },
+  {
     version: "1.0.21",
     date: "2025-08-02",
     type: "patch",

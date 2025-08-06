@@ -310,6 +310,22 @@ export const toolsData: Tool[] = [
     featured: true,
     lastUpdated: "1天前",
     toolType: "web"
+  },
+  // 新增第20个工具
+  {
+    id: 20,
+    name: "外卖数周报系统（升级版）",
+    description: "输入店铺数据，自动生成专业的运营分析报告",
+    category: "运营工具",
+    url: "https://www.csch.asia/",
+    icon: FileText,
+    rating: 4.9,
+    downloads: "1.2k",
+    tags: ["数据分析", "周报生成", "运营报告", "自动化"],
+    color: "from-blue-300 to-blue-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
   }
 ]
 
