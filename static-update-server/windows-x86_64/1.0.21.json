@@ -1,6 +1,1 @@
-{
-  "version": "1.0.21",
-  "notes": "• 天气API最终修复版本\n• 完善Tauri HTTP权限配置\n• 修复JSON配置语法错误\n• 独立HTTP capability配置文件\n• 正确的URL作用域权限设置\n• 开发和生产环境完全兼容\n• 天气组件功能完全正常",
-  "pub_date": "2025-08-02T12:00:00.000Z",
-  "platforms": {}
-}
+{"version": "1.0.22", "notes": "New Tool Addition - Takeaway Weekly Report System (Upgraded)\n\nMain Features:\n• Added 20th professional tool\n• Automatic professional operation analysis report generation\n• Enhanced data analysis capabilities\n• Expanded operation tools to 11 total\n• Complete tool ecosystem with 20 tools", "pub_date": "2025-08-06T12:00:00.000Z", "platforms": {"windows-x86_64": {"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHJzdCBzaWduaW5nIGNyeXB0b2dyYXBoaWNhbGx5IHNlY3VyZSBzaWduYXR1cmVzIGFyZSBhdmFpbGFibGUgZm9yIGluc3RhbGxpbmdcblJXU0JBSG9yOEJlSkcxZ3pPdmJTZ2VoZTE2amQ2", "url": "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v1.0.22/csch_1.0.22_x64-setup.exe"}}}
