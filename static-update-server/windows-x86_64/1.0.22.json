@@ -1,6 +1,6 @@
 {
   "version": "1.0.23",
-  "notes": "Image Wall Splitter Tool Addition\n\nMain Features:\n• Added 21st professional tool - Image Wall Splitter\n• One-click upload and auto-split into three equal parts\n• Multi-format download support\n• Batch image processing for operations\n• Expanded operations tools to 12 total\n• React state management optimization",
+  "notes": "Image Wall Splitter Tool Addition\n\nMain Features:\n• Added 22nd professional tool - Image Wall Splitter\n• One-click upload and auto-split into three equal parts\n• Multi-format download support\n• Batch image processing for operations\n• Expanded total tools to 22 (Operations: 12, Design: 3, Sales: 3, HR: 5, Customer Service: 2)\n• React state management optimization",
   "pub_date": "2025-08-07T09:31:40.663Z",
   "platforms": {
     "windows-x86_64": {
