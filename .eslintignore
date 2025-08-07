@@ -1,0 +1,31 @@
+# ESLint ignore file
+# 构建输出目录
+/out/
+/.next/
+/dist/
+/build/
+
+# 依赖
+/node_modules/
+
+# Tauri相关
+/src-tauri/target/
+/src-tauri/gen/
+
+# 日志
+*.log
+
+# 静态文件
+/public/
+/static/
+
+# 配置文件
+next.config.mjs
+tailwind.config.ts
+postcss.config.mjs
+
+# 类型声明文件
+*.d.ts
+
+# 测试覆盖率
+/coverage/

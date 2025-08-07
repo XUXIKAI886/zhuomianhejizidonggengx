@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目架构概述
 
-这是一个基于Tauri 2.x + Next.js 15的桌面应用"呈尚策划工具中心"，集成19个专业工具，包含完整的用户认证系统和MongoDB数据库集成。
+这是一个基于Tauri 2.x + Next.js 15的桌面应用"呈尚策划工具中心"，集成20个专业工具，包含完整的用户认证系统和MongoDB数据库集成。
 
 ### 核心技术栈
 - **前端**: Next.js 15 + React 19 + TypeScript + Tailwind CSS
@@ -38,6 +38,21 @@ node scripts/create-admin-nodejs.js      # 初始化管理员账号 (admin/admin
 node scripts/generate-password-hash.js   # 生成密码哈希工具
 ```
 
+### 版本管理
+```bash
+node scripts/update-version.js           # 统一更新package.json和tauri.conf.json版本号
+scripts/release-version.bat              # 自动发布新版本(Windows)
+scripts/quick-release.bat                # 快速发布脚本
+```
+
+### 测试和验证
+```bash
+node scripts/test-token-auth.js          # 测试Token认证系统
+scripts/verify-api-server.ps1            # 验证API服务器状态(PowerShell)
+scripts/verify-api-server.sh             # 验证API服务器状态(Shell)
+scripts/clean-build.bat                  # 清理构建文件(Windows)
+```
+
 ## 项目结构详解
 
 ### 核心目录架构
@@ -63,7 +78,7 @@ lib/                         # 核心工具库
 ├── auth/                    # 认证上下文和状态管理
 ├── database.ts             # MongoDB数据库服务类
 ├── tauri-api.ts            # Tauri IPC封装
-├── tool-data.ts            # 19个工具完整数据配置
+├── tool-data.ts            # 20个工具完整数据配置
 └── utils.ts                # 通用工具函数
 
 src-tauri/                   # Tauri后端 (Rust)
@@ -104,8 +119,8 @@ types/                       # TypeScript类型定义
 ## 工具数据管理
 
 ### 工具配置中心 (`lib/tool-data.ts`)
-包含19个工具的完整信息:
-- 10个运营工具 (商家回复解答手册、美团运营知识等)
+包含20个工具的完整信息，按业务类型组织:
+- 11个运营工具 (商家回复解答手册、美团运营知识、外卖数周报系统等)
 - 2个美工工具 (图片采集、数据处理)
 - 2个销售工具 (数据统计、报告生成)
 - 4个人事工具 (财务记账、排班系统等)
@@ -154,6 +169,7 @@ types/                       # TypeScript类型定义
 - 支持多重备用机制 (官方API + window.__TAURI__)
 - 环境检测和错误处理完善
 - 构建目标: NSIS Windows安装包
+- 窗口配置: 1480x980 最小尺寸, 支持调整大小
 
 ### 安全机制
 - 开发者工具保护 (可临时禁用调试)
@@ -175,14 +191,16 @@ types/                       # TypeScript类型定义
 
 ### 功能验证
 - 登录系统: Web版本和桌面版本一致性
-- 工具启动: 19个工具URL可访问性
+- 工具启动: 20个工具URL可访问性
 - 数据统计: MongoDB聚合查询正确性
 - 用户管理: CRUD操作完整性
 
 ### 版本发布
-- 版本号同步: package.json + tauri.conf.json
+- 版本号同步: package.json + tauri.conf.json (当前: package.json v1.0.17, tauri.conf.json v1.0.22)
 - 构建验证: 测试桌面应用启动和功能
 - 更新检测: 验证自动更新服务器响应
+- 版本发布脚本: `scripts/release-version.bat` 和 `scripts/update-version.js`
+- 自动更新服务器: `https://www.yujinkeji.asia/api/releases/`
 
 ## 重要文件位置
 

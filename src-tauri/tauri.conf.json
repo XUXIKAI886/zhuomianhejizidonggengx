@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "csch",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "identifier": "com.chengshangcehua.tools",
   "build": {
     "frontendDist": "../out",
@@ -30,7 +30,10 @@
     ],
     "security": {
       "csp": "default-src 'self' tauri: asset: http://localhost:3000 ipc: https://ipc.localhost; img-src 'self' asset: data: http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://restapi.amap.com; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost ws://localhost:3000 http://localhost:3000 https: https://restapi.amap.com tauri:; frame-src 'self' https: http: data:;",
-      "capabilities": ["main-capability", "http-capability"]
+      "capabilities": [
+        "main-capability",
+        "http-capability"
+      ]
     },
     "withGlobalTauri": true
   },
@@ -45,7 +48,9 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

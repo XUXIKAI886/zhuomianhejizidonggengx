@@ -18,6 +18,7 @@ import {
   UserCheck,
   PieChart,
   Search,
+  Scissors,
 } from "lucide-react"
 import { Tool } from "@/types/tools"
 
@@ -324,6 +325,22 @@ export const toolsData: Tool[] = [
     tags: ["数据分析", "周报生成", "运营报告", "自动化"],
     color: "from-blue-300 to-blue-400",
     featured: true,
+    lastUpdated: "今天",
+    toolType: "external"  // 改为external类型，在外部浏览器打开
+  },
+  // 新增第21个工具
+  {
+    id: 21,
+    name: "图片墙图片分割工具",
+    description: "上传图片墙图片，自动分割为三个相等部分，支持多种格式下载",
+    category: "运营工具",
+    url: "https://xuxikai886.github.io/tupianqiangtupianfenge/",
+    icon: Scissors,
+    rating: 4.8,
+    downloads: "0.8k",
+    tags: ["图片分割", "批量处理", "格式转换", "运营素材"],
+    color: "from-blue-300 to-blue-400",
+    featured: false,
     lastUpdated: "今天",
     toolType: "web"
   }

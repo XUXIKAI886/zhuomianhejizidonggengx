@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { WeatherWidget } from "@/components/weather-widget"
 
 const categories = [
-  { id: "all", name: "全部工具", icon: Layers, count: 19, color: "from-gray-300 to-gray-400" },
-  { id: "operations", name: "运营工具", icon: TrendingUp, count: 10, color: "from-blue-300 to-blue-400", hot: true },
+  { id: "all", name: "全部工具", icon: Layers, count: 20, color: "from-gray-300 to-gray-400" },
+  { id: "operations", name: "运营工具", icon: TrendingUp, count: 11, color: "from-blue-300 to-blue-400", hot: true },
   { id: "design", name: "美工工具", icon: Palette, count: 2, color: "from-purple-300 to-purple-400" },
   { id: "sales", name: "销售工具", icon: ShoppingCart, count: 2, color: "from-emerald-300 to-emerald-400" },
   { id: "hr", name: "人事工具", icon: Users, count: 4, color: "from-amber-300 to-amber-400" },

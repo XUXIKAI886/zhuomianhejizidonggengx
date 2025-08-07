@@ -22,7 +22,7 @@ export function UpdateChecker() {
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [isChecking, setIsChecking] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
-  const [currentVersion, setCurrentVersion] = useState<string>('1.0.22')  // 修复：使用正确的初始版本
+  const [currentVersion, setCurrentVersion] = useState<string>('1.0.23')  // 修复：使用正确的初始版本
 
   // 获取当前应用版本
   const getCurrentVersion = async () => {
@@ -41,7 +41,7 @@ export function UpdateChecker() {
           console.warn('Tauri API获取版本失败，使用配置文件版本:', tauriError)
 
           // 如果Tauri API失败，使用配置文件版本作为fallback
-          const configVersion = '1.0.16' // 从tauri.conf.json中的版本
+          const configVersion = '1.0.23' // 从tauri.conf.json中的版本
           console.log('使用配置文件版本:', configVersion)
           setCurrentVersion(configVersion)
 
@@ -50,7 +50,7 @@ export function UpdateChecker() {
         }
       } else {
         console.log('非Tauri环境，使用默认版本号')
-        const defaultVersion = '1.0.16'
+        const defaultVersion = '1.0.23'
         setCurrentVersion(defaultVersion)
         return defaultVersion
       }
@@ -58,7 +58,7 @@ export function UpdateChecker() {
       console.error('获取应用版本失败:', error)
 
       // 使用fallback版本号
-      const fallbackVersion = '1.0.16'
+      const fallbackVersion = '1.0.23'
       setCurrentVersion(fallbackVersion)
 
       return fallbackVersion

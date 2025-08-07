@@ -9,7 +9,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: '呈尚策划工具中心',
-  description: '集成19个专业工具的桌面应用，服务于运营、美工、销售、人事、客服等不同岗位的工作需求',
+  description: '集成20个专业工具的桌面应用，服务于运营、美工、销售、人事、客服等不同岗位的工作需求',
   generator: '呈尚策划',
 }
 
