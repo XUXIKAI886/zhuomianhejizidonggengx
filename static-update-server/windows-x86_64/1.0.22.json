@@ -1,6 +1,11 @@
 {
-  "version": "1.0.22",
-  "notes": "• 新增第20个工具 - 外卖数周报系统（升级版）\n• 自动生成专业运营分析报告\n• 运营工具总数扩展至11个\n• 完善的工具生态系统",
-  "pub_date": "2025-08-06T12:00:00.000Z",
-  "platforms": {}
+  "version": "1.0.23",
+  "notes": "Image Wall Splitter Tool Addition\n\nMain Features:\n• Added 21st professional tool - Image Wall Splitter\n• One-click upload and auto-split into three equal parts\n• Multi-format download support\n• Batch image processing for operations\n• Expanded operations tools to 12 total\n• React state management optimization",
+  "pub_date": "2025-08-07T09:31:40.663Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHJzdCBzaWduaW5nIGNyeXB0b2dyYXBoaWNhbGx5IHNlY3VyZSBzaWduYXR1cmVzIGFyZSBhdmFpbGFibGUgZm9yIGluc3RhbGxpbmdcblJXU0JBSG9yOEJlSkcxZ3pPdmJTZ2VoZTE2amQ2",
+      "url": "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/download/v1.0.23/csch_1.0.23_x64-setup.exe"
+    }
+  }
 }

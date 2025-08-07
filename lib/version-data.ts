@@ -35,7 +35,7 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "file", text: "运营素材批量处理" },
       { icon: "globe", text: "运营工具总数扩展至12个" }
     ],
-    isNew: true,
+    isNew: false,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.23"
   },
   {
