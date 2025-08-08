@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use mongodb::{Client, Database, Collection, bson::{doc, oid::ObjectId, DateTime}};
+use mongodb::{Client, Database, Collection, bson::{doc, oid::ObjectId, DateTime, Document}};
 // MongoDB cursor handling - no external futures traits needed
 use futures::TryStreamExt;
 use std::sync::Arc;
@@ -72,7 +72,7 @@ pub struct ToolUsage {
     #[serde(rename = "toolName")]
     pub tool_name: String,
     #[serde(rename = "clickCount")]
-    pub click_count: i64,
+    pub click_count: i32,  // 改为i32，匹配数据库中的Int32
     #[serde(rename = "totalUsageTime")]
     pub total_usage_time: i64,
     #[serde(rename = "lastUsedAt")]
@@ -160,7 +160,7 @@ pub struct ToolUsageDetail {
     #[serde(rename = "toolName")]
     pub tool_name: String,
     #[serde(rename = "clickCount")]
-    pub click_count: i64,
+    pub click_count: i32,  // 改为i32，匹配数据库中的Int32
     #[serde(rename = "totalUsageTime")]
     pub total_usage_time: i64,
     #[serde(rename = "lastUsedAt")]
@@ -895,7 +895,7 @@ pub async fn get_user_analytics(
                              i + 1,
                              tool.get_i32("toolId").unwrap_or(0),
                              tool.get_str("toolName").unwrap_or("未知"),
-                             tool.get_i64("clickCount").unwrap_or(0),
+                             tool.get_i32("clickCount").unwrap_or(0) as i64,  // 转换为i64用于计算
                              tool.get_i64("totalUsageTime").unwrap_or(0));
                 }
             }
@@ -909,7 +909,7 @@ pub async fn get_user_analytics(
             let mut total_clicks_manual = 0i64;
             for tool_doc in raw_tool_usage.iter().take(3) {
                 if let Some(tool) = tool_doc.as_document() {
-                    let clicks = tool.get_i64("clickCount").unwrap_or(0);
+                    let clicks = tool.get_i32("clickCount").unwrap_or(0) as i64;  // 转换为i64用于累计
                     total_clicks_manual += clicks;
                     println!("  原始工具: ID={}, 点击={}",
                              tool.get_i32("toolId").unwrap_or(0),
@@ -947,7 +947,7 @@ pub async fn get_user_analytics(
                             Some(ToolUsageDetail {
                                 tool_id: doc.get_i32("toolId").unwrap_or(0),
                                 tool_name: doc.get_str("toolName").unwrap_or("未知工具").to_string(),
-                                click_count: doc.get_i64("clickCount").unwrap_or(0),
+                                click_count: doc.get_i32("clickCount").unwrap_or(0),  // 保持i32类型匹配ToolUsageDetail
                                 total_usage_time: doc.get_i64("totalUsageTime").unwrap_or(0),
                                 last_used_at: doc.get_datetime("lastUsedAt")
                                     .map(|dt| dt.try_to_rfc3339_string().unwrap_or_default())
@@ -1758,46 +1758,87 @@ pub async fn clear_test_data(
                tool_usage_result.deleted_count, sessions_result.deleted_count))
 }
 
-// 调试tool_usage集合的数据
+// 测试ToolUsage反序列化和统计
 #[tauri::command]
 pub async fn debug_tool_usage_data(
     state: tauri::State<'_, AppState>,
 ) -> Result<String, String> {
-    println!("🔍 [debug_tool_usage_data] 开始检查tool_usage数据...");
+    println!("🔍 [debug_tool_usage_data] 测试ToolUsage结构体反序列化...");
     let mongo = state.mongo.read().await;
     
-    // 查看tool_usage集合的文档
-    let cursor = mongo.tool_usage().find(doc! {}).limit(10).await.map_err(|e| format!("查询tool_usage失败: {}", e))?;
-    let tool_usage_records: Vec<ToolUsage> = cursor.try_collect().await.map_err(|e| format!("收集tool_usage失败: {}", e))?;
+    // 尝试正常反序列化为ToolUsage结构体
+    let mut cursor = mongo.tool_usage().find(doc! {}).limit(10).await.map_err(|e| format!("查询失败: {}", e))?;
     
     let mut debug_info = String::new();
-    debug_info.push_str("🔧 Tool Usage 数据调试:\n\n");
+    debug_info.push_str("🔧 ToolUsage 反序列化测试:\n\n");
     
-    debug_info.push_str(&format!("📊 总记录数: {}\n\n", tool_usage_records.len()));
+    let mut total_count = 0;
+    let mut total_clicks = 0i32;
+    let mut user_stats = std::collections::HashMap::new();
     
-    for (i, record) in tool_usage_records.iter().enumerate().take(5) {
-        debug_info.push_str(&format!("📝 记录 {}: \n", i + 1));
-        debug_info.push_str(&format!("   用户ID: {:?}\n", record.user_id));
-        debug_info.push_str(&format!("   工具ID: {}\n", record.tool_id));
-        debug_info.push_str(&format!("   工具名称: {}\n", record.tool_name));
-        debug_info.push_str(&format!("   点击次数: {}\n", record.click_count));
-        debug_info.push_str(&format!("   总使用时长: {}\n", record.total_usage_time));
-        debug_info.push_str(&format!("   最后使用时间: {:?}\n", record.last_used_at));
+    while let Some(result) = cursor.try_next().await.map_err(|e| format!("反序列化失败: {}", e))? {
+        total_count += 1;
+        total_clicks += result.click_count;
+        
+        if total_count <= 5 {
+            debug_info.push_str(&format!("📝 记录 {}: \n", total_count));
+            debug_info.push_str(&format!("   用户ID: {}\n", result.user_id.to_hex()));
+            debug_info.push_str(&format!("   工具ID: {}\n", result.tool_id));
+            debug_info.push_str(&format!("   工具名称: {}\n", result.tool_name));
+            debug_info.push_str(&format!("   点击次数: {}\n", result.click_count));
+            debug_info.push_str(&format!("   总使用时长: {}\n", result.total_usage_time));
+            debug_info.push_str(&format!("   最后使用时间: {:?}\n", result.last_used_at));
+            debug_info.push_str("\n");
+        }
+        
+        // 统计数据
+        let user_id_str = result.user_id.to_hex();
+        let entry = user_stats.entry(user_id_str).or_insert((0i32, 0i64));
+        entry.0 += result.click_count;
+        entry.1 += result.total_usage_time;
+    }
+    
+    debug_info.push_str(&format!("📊 统计结果:\n"));
+    debug_info.push_str(&format!("   总记录数: {}\n", total_count));
+    debug_info.push_str(&format!("   总点击次数: {}\n", total_clicks));
+    debug_info.push_str(&format!("\n👥 按用户统计:\n"));
+    
+    for (user_id, (clicks, time)) in user_stats {
+        debug_info.push_str(&format!("   用户 {}: 总点击={}, 总时长={}\n", user_id, clicks, time));
+    }
+    
+    Ok(debug_info)
+}
+
+// 检查数据库实际字段名 - 直接返回原始文档
+#[tauri::command]
+pub async fn check_raw_tool_usage_fields(
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    println!("🔍 [check_raw_tool_usage_fields] 检查tool_usage集合的实际字段名...");
+    let mongo = state.mongo.read().await;
+    
+    // 使用原生MongoDB查询，不进行类型转换
+    let collection = mongo.database.collection::<Document>("tool_usage");
+    let mut cursor = collection.find(doc! {}).limit(3).await.map_err(|e| format!("查询失败: {}", e))?;
+    
+    let mut debug_info = String::new();
+    debug_info.push_str("🔧 Tool Usage 原始字段调试:\n\n");
+    
+    let mut count = 0;
+    while let Some(doc) = cursor.try_next().await.map_err(|e| format!("遍历失败: {}", e))? {
+        count += 1;
+        debug_info.push_str(&format!("📝 原始文档 {}:\n", count));
+        
+        // 列出所有字段名
+        for (key, value) in doc.iter() {
+            debug_info.push_str(&format!("   {}: {:?}\n", key, value));
+        }
         debug_info.push_str("\n");
     }
     
-    // 按用户ID统计
-    let mut user_stats = std::collections::HashMap::new();
-    for record in &tool_usage_records {
-        let user_id_str = record.user_id.to_hex();
-        let entry = user_stats.entry(user_id_str.clone()).or_insert((0i64, 0i64));
-        entry.0 += record.click_count;
-        entry.1 += record.total_usage_time;
-    }
-    
-    debug_info.push_str("👥 按用户统计:\n");
-    for (user_id, (clicks, time)) in user_stats {
-        debug_info.push_str(&format!("   用户 {}: 总点击={}, 总时长={}\n", user_id, clicks, time));
+    if count == 0 {
+        debug_info.push_str("❌ 没有找到任何tool_usage记录\n");
     }
     
     Ok(debug_info)
@@ -1845,47 +1886,49 @@ pub async fn fix_tool_usage_click_counts(
     println!("🔧 [fix_tool_usage_click_counts] 开始修复tool_usage的clickCount字段...");
     let mongo = state.mongo.read().await;
     
-    // 查看当前tool_usage记录
-    let cursor = mongo.tool_usage().find(doc! {}).await.map_err(|e| format!("查询tool_usage失败: {}", e))?;
-    let records: Vec<ToolUsage> = cursor.try_collect().await.map_err(|e| format!("收集tool_usage失败: {}", e))?;
+    // 直接查看MongoDB文档，获取ToolUsage结构
+    let mut cursor = mongo.tool_usage().find(doc! {}).await.map_err(|e| format!("查询tool_usage失败: {}", e))?;
     
-    println!("📊 [fix_tool_usage_click_counts] 找到 {} 条tool_usage记录", records.len());
-    
+    let mut total_count = 0;
     let mut fixed_count = 0;
     let mut records_with_zero_clicks = 0;
     
-    for record in &records {
-        println!("🔍 [fix_tool_usage_click_counts] 检查记录: 工具{}({}) - 点击:{}, 时长:{}", 
-                 record.tool_name, record.tool_id, record.click_count, record.total_usage_time);
+    while let Some(result) = cursor.try_next().await.map_err(|e| format!("遍历cursor失败: {}", e))? {
+        total_count += 1;
         
-        if record.click_count == 0 && record.total_usage_time > 0 {
+        println!("🔍 [fix_tool_usage_click_counts] 检查记录: 工具{}({}) - 点击:{}, 时长:{}", 
+                 result.tool_name, result.tool_id, result.click_count, result.total_usage_time);
+        
+        if result.click_count == 0 && result.total_usage_time > 0 {
             records_with_zero_clicks += 1;
             // 根据使用时长估算点击次数 (假设每次点击平均使用5分钟=300秒)
-            let estimated_clicks = std::cmp::max(1, record.total_usage_time / 300);
+            let estimated_clicks = std::cmp::max(1i32, (result.total_usage_time / 300) as i32);
             
-            let result = mongo.tool_usage()
-                .update_one(
-                    doc! {"_id": record.id.unwrap()},
-                    doc! {"$set": {"clickCount": estimated_clicks}}
-                )
-                .await
-                .map_err(|e| format!("更新clickCount失败: {}", e))?;
-            
-            if result.modified_count > 0 {
-                fixed_count += 1;
-                println!("✅ [fix_tool_usage_click_counts] 修复记录: {} - 设置点击次数为 {}", 
-                         record.tool_name, estimated_clicks);
+            if let Some(doc_id) = result.id {
+                let update_result = mongo.tool_usage()
+                    .update_one(
+                        doc! {"_id": doc_id},
+                        doc! {"$set": {"clickCount": estimated_clicks}}
+                    )
+                    .await
+                    .map_err(|e| format!("更新clickCount失败: {}", e))?;
+                
+                if update_result.modified_count > 0 {
+                    fixed_count += 1;
+                    println!("✅ [fix_tool_usage_click_counts] 修复记录: {} - 设置点击次数为 {}", 
+                             result.tool_name, estimated_clicks);
+                }
             }
         }
     }
     
     println!("🎯 [fix_tool_usage_click_counts] 修复完成！");
-    println!("   总记录数: {}", records.len());
+    println!("   总记录数: {}", total_count);
     println!("   零点击记录数: {}", records_with_zero_clicks);
     println!("   成功修复数: {}", fixed_count);
     
     Ok(format!("✅ tool_usage点击次数修复完成！\n总记录数: {}\n零点击记录数: {}\n成功修复数: {}", 
-               records.len(), records_with_zero_clicks, fixed_count))
+               total_count, records_with_zero_clicks, fixed_count))
 }
 
 // 初始化用户登录计数 - 为现有用户添加缺失字段

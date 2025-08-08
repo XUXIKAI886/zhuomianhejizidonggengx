@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { MoreHorizontal, UserPlus, Edit, Trash2, RotateCcw, Users, Activity, TrendingUp, Database } from 'lucide-react'
+import { MoreHorizontal, UserPlus, Edit, Trash2, RotateCcw, Users, Activity, TrendingUp, Database, Shuffle, Copy } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { apiCall } from '@/lib/tauri-api'
@@ -76,7 +76,7 @@ export default function AdminPage() {
       setLoading(true)
       const [usersData, statsData] = await Promise.all([
         apiCall('get_all_users_admin'),
-        apiCall('get_system_overview')
+        apiCall('get_system_analytics')
       ])
       setUsers(usersData)
       setStats(statsData)
@@ -123,6 +123,69 @@ export default function AdminPage() {
     } catch (error) {
       console.error('删除用户失败:', error)
       toast.error('删除失败')
+    }
+  }
+
+  // 生成随机密码
+  const generateRandomPassword = () => {
+    const length = 12
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
+    let password = ''
+    
+    // 确保包含至少一个大写字母、小写字母、数字和特殊字符
+    password += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]
+    password += 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)]
+    password += '0123456789'[Math.floor(Math.random() * 10)]
+    password += '!@#$%^&*'[Math.floor(Math.random() * 8)]
+    
+    // 填充剩余位数
+    for (let i = 4; i < length; i++) {
+      password += charset[Math.floor(Math.random() * charset.length)]
+    }
+    
+    // 打乱密码字符顺序
+    return password.split('').sort(() => Math.random() - 0.5).join('')
+  }
+
+  // 生成并设置随机密码
+  const handleGeneratePassword = () => {
+    const newPassword = generateRandomPassword()
+    setCreateUserForm(prev => ({ ...prev, password: newPassword }))
+    toast.success('密码已生成')
+  }
+
+  // 复制用户信息到剪贴板
+  const handleCopyUserInfo = async () => {
+    const { username, password } = createUserForm
+    if (!username || !password) {
+      toast.error('请先填写完整用户信息')
+      return
+    }
+
+    const userInfo = `用户名: ${username}\n密码: ${password}`
+    
+    try {
+      await navigator.clipboard.writeText(userInfo)
+      toast.success('用户信息已复制到剪贴板')
+    } catch (error) {
+      // 备用方案：创建临时textarea元素
+      const textArea = document.createElement('textarea')
+      textArea.value = userInfo
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-999999px'
+      textArea.style.top = '-999999px'
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      
+      try {
+        document.execCommand('copy')
+        toast.success('用户信息已复制到剪贴板')
+      } catch (fallbackError) {
+        toast.error('复制失败，请手动复制')
+      }
+      
+      document.body.removeChild(textArea)
     }
   }
 
@@ -488,14 +551,25 @@ export default function AdminPage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="create-password" className="text-right">密码</Label>
-                <Input 
-                  id="create-password" 
-                  type="password" 
-                  className="col-span-3"
-                  value={createUserForm.password}
-                  onChange={(e) => setCreateUserForm(prev => ({ ...prev, password: e.target.value }))}
-                  placeholder="至少6个字符"
-                />
+                <div className="col-span-3 flex gap-2">
+                  <Input 
+                    id="create-password" 
+                    type="password" 
+                    className="flex-1"
+                    value={createUserForm.password}
+                    onChange={(e) => setCreateUserForm(prev => ({ ...prev, password: e.target.value }))}
+                    placeholder="至少6个字符"
+                  />
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleGeneratePassword}
+                    className="px-3"
+                  >
+                    <Shuffle className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="create-role" className="text-right">角色</Label>
@@ -518,6 +592,14 @@ export default function AdminPage() {
                 取消
               </Button>
               <Button onClick={handleCreateUser}>创建用户</Button>
+              <Button 
+                variant="outline" 
+                onClick={handleCopyUserInfo}
+                className="ml-2"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                复制
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

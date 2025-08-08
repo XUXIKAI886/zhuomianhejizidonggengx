@@ -23,6 +23,22 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.24",
+    date: "2025-08-08",
+    type: "minor",
+    title: "📚 README文档全面优化升级",
+    description: "全面优化项目README文档，更新版本信息至v1.0.24，重构项目介绍和技术架构说明，提供更清晰的快速开始指引和完整的功能特色展示。",
+    features: [
+      { icon: "sparkles", text: "README文档全面重构优化", highlight: true },
+      { icon: "zap", text: "更新版本信息和工具数量至21个" },
+      { icon: "settings", text: "重新设计技术架构展示" },
+      { icon: "file", text: "优化快速开始和部署指引" },
+      { icon: "globe", text: "改进项目特色和统计数据展示" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.24"
+  },
+  {
     version: "1.0.23",
     date: "2025-08-07",
     type: "minor",
