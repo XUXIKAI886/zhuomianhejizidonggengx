@@ -152,6 +152,21 @@ pub struct PopularTool {
     pub unique_users: i64,
 }
 
+// 工具使用详情结构
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ToolUsageDetail {
+    #[serde(rename = "toolId")]
+    pub tool_id: i32,
+    #[serde(rename = "toolName")]
+    pub tool_name: String,
+    #[serde(rename = "clickCount")]
+    pub click_count: i64,
+    #[serde(rename = "totalUsageTime")]
+    pub total_usage_time: i64,
+    #[serde(rename = "lastUsedAt")]
+    pub last_used_at: String,
+}
+
 // 高级用户分析数据结构
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserAnalytics {
@@ -173,6 +188,8 @@ pub struct UserAnalytics {
     pub created_at: String,
     #[serde(rename = "favoriteTools")]
     pub favorite_tools: Vec<String>,
+    #[serde(rename = "toolUsageDetails")]
+    pub tool_usage_details: Vec<ToolUsageDetail>,
 }
 
 // 系统高级统计
@@ -679,38 +696,38 @@ pub async fn get_system_overview(
 
 #[tauri::command]
 pub async fn track_user_activity(
-    user_id: String,
-    activity_type: String,
-    tool_id: Option<i32>,
-    tool_name: Option<String>,
+    userId: String,
+    activityType: String,
+    toolId: Option<i32>,
+    toolName: Option<String>,
     duration: Option<i64>,
     state: tauri::State<'_, AppState>,
 ) -> Result<(), String> {
     println!("🎯 [track_user_activity] 开始追踪用户活动: 用户ID={}, 活动类型={}, 工具ID={:?}, 工具名称={:?}, 时长={:?}", 
-             user_id, activity_type, tool_id, tool_name, duration);
+             userId, activityType, toolId, toolName, duration);
     
     let mongo = state.mongo.read().await;
     
     // 解析用户ID
-    let user_object_id = ObjectId::parse_str(&user_id)
+    let user_object_id = ObjectId::parse_str(&userId)
         .map_err(|e| {
             println!("❌ [track_user_activity] 无效的用户ID: {}", e);
             format!("无效的用户ID: {}", e)
         })?;
     
-    match activity_type.as_str() {
+    match activityType.as_str() {
         "login" => {
             // 记录登录活动 - 已在 login 函数中处理会话创建
             // 这里可以记录额外的登录统计信息
-            println!("记录用户登录活动: {}", user_id);
+            println!("记录用户登录活动: {}", userId);
         },
         "logout" => {
             // 记录登出活动 - 在 logout 函数中处理会话结束
-            println!("记录用户登出活动: {}", user_id);
+            println!("记录用户登出活动: {}", userId);
         },
         "tool_click" => {
             println!("🎯 [track_user_activity] 处理工具点击事件");
-            if let Some(tid) = tool_id {
+            if let Some(tid) = toolId {
                 println!("🎯 [track_user_activity] 工具ID: {}, 用户ObjectID: {}", tid, user_object_id);
                 
                 // 更新或插入工具使用记录
@@ -723,10 +740,11 @@ pub async fn track_user_activity(
                     "$inc": {"clickCount": 1},
                     "$set": {
                         "lastUsedAt": DateTime::now(),
-                        "toolName": tool_name.clone().unwrap_or_else(|| format!("工具{}", tid))
+                        "toolName": toolName.clone().unwrap_or_else(|| format!("工具{}", tid))
                     },
                     "$setOnInsert": {
                         "totalUsageTime": 0
+                        // 移除clickCount，让$inc自动处理字段创建
                     }
                 };
                 
@@ -747,7 +765,7 @@ pub async fn track_user_activity(
             }
         },
         "tool_usage" => {
-            if let (Some(tid), Some(dur)) = (tool_id, duration) {
+            if let (Some(tid), Some(dur)) = (toolId, duration) {
                 let filter = doc! {
                     "userId": user_object_id,
                     "toolId": tid
@@ -756,7 +774,7 @@ pub async fn track_user_activity(
                 let update = doc! {
                     "$inc": {"totalUsageTime": dur},
                     "$set": {
-                        "toolName": tool_name.clone().unwrap_or_else(|| format!("工具{}", tid))
+                        "toolName": toolName.clone().unwrap_or_else(|| format!("工具{}", tid))
                     }
                 };
                 
@@ -767,12 +785,12 @@ pub async fn track_user_activity(
             }
         },
         _ => {
-            println!("❌ [track_user_activity] 未知的活动类型: {}", activity_type);
-            return Err(format!("未知的活动类型: {}。支持的类型: login, logout, tool_click, tool_usage", activity_type));
+            println!("❌ [track_user_activity] 未知的活动类型: {}", activityType);
+            return Err(format!("未知的活动类型: {}。支持的类型: login, logout, tool_click, tool_usage", activityType));
         }
     }
     
-    println!("✅ [track_user_activity] 用户活动追踪完成: 用户ID={}, 活动类型={}", user_id, activity_type);
+    println!("✅ [track_user_activity] 用户活动追踪完成: 用户ID={}, 活动类型={}", userId, activityType);
     Ok(())
 }
 
@@ -799,16 +817,38 @@ pub async fn get_user_analytics(
         },
         doc! {
             "$addFields": {
-                "totalToolClicks": { "$sum": "$tool_usage.clickCount" },
-                "totalUsageTime": { "$sum": "$tool_usage.totalUsageTime" },
-                "loginCount": { "$ifNull": ["$loginCount", 0] }, // 保留原有的loginCount字段
+                "totalToolClicks": { 
+                    "$sum": {
+                        "$map": {
+                            "input": "$tool_usage",
+                            "as": "usage",
+                            "in": "$$usage.clickCount"
+                        }
+                    }
+                },
+                "totalUsageTime": { 
+                    "$sum": {
+                        "$map": {
+                            "input": "$tool_usage",
+                            "as": "usage", 
+                            "in": "$$usage.totalUsageTime"
+                        }
+                    }
+                },
+                "loginCount": { "$ifNull": ["$loginCount", 0] },
+                "toolUsageDetails": {
+                    "$sortArray": {
+                        "input": "$tool_usage",
+                        "sortBy": { "clickCount": -1 }
+                    }
+                },
                 "favoriteTools": {
                     "$map": {
                         "input": { "$slice": [
-                            { "$sortArray": { 
-                                "input": "$tool_usage", 
-                                "sortBy": { "clickCount": -1 } 
-                            }}, 3
+                            { "$sortArray": {
+                                "input": "$tool_usage",
+                                "sortBy": { "clickCount": -1 }
+                            }}, 5
                         ]},
                         "as": "tool",
                         "in": "$$tool.toolName"
@@ -837,6 +877,48 @@ pub async fn get_user_analytics(
     let mut results = Vec::new();
     while cursor.advance().await.map_err(|e| format!("遍历聚合结果失败: {}", e))? {
         let document = cursor.deserialize_current().map_err(|e| format!("反序列化聚合结果失败: {}", e))?;
+
+        let username = document.get_str("username").unwrap_or("未知用户");
+        println!("📄 [get_user_analytics] 处理用户文档: {}", username);
+
+        // 调试：检查聚合结果的关键字段
+        let total_clicks = document.get_i64("totalToolClicks").unwrap_or(0);
+        let total_time = document.get_i64("totalUsageTime").unwrap_or(0);
+        println!("🔍 [get_user_analytics] 用户 {} 聚合结果: 总点击={}, 总时长={}", username, total_clicks, total_time);
+
+        // 调试：检查tool_usage数组
+        if let Ok(tool_usage_array) = document.get_array("toolUsageDetails") {
+            println!("🔧 [get_user_analytics] 用户 {} 的工具使用详情数组长度: {}", username, tool_usage_array.len());
+            for (i, tool_doc) in tool_usage_array.iter().enumerate().take(3) { // 只显示前3个
+                if let Some(tool) = tool_doc.as_document() {
+                    println!("  工具 {}: ID={}, 名称={}, 点击={}, 时长={}",
+                             i + 1,
+                             tool.get_i32("toolId").unwrap_or(0),
+                             tool.get_str("toolName").unwrap_or("未知"),
+                             tool.get_i64("clickCount").unwrap_or(0),
+                             tool.get_i64("totalUsageTime").unwrap_or(0));
+                }
+            }
+        } else {
+            println!("⚠️ [get_user_analytics] 用户 {} 没有 toolUsageDetails 字段", username);
+        }
+
+        // 调试：检查原始tool_usage数组（聚合前）
+        if let Ok(raw_tool_usage) = document.get_array("tool_usage") {
+            println!("🔍 [get_user_analytics] 用户 {} 原始tool_usage数组长度: {}", username, raw_tool_usage.len());
+            let mut total_clicks_manual = 0i64;
+            for tool_doc in raw_tool_usage.iter().take(3) {
+                if let Some(tool) = tool_doc.as_document() {
+                    let clicks = tool.get_i64("clickCount").unwrap_or(0);
+                    total_clicks_manual += clicks;
+                    println!("  原始工具: ID={}, 点击={}",
+                             tool.get_i32("toolId").unwrap_or(0),
+                             clicks);
+                }
+            }
+            println!("🧮 [get_user_analytics] 用户 {} 手动计算总点击: {}", username, total_clicks_manual);
+        }
+
         let user_analytics = UserAnalytics {
             id: document.get_object_id("_id")
                 .map(|id| id.to_hex())
@@ -856,6 +938,25 @@ pub async fn get_user_analytics(
             favorite_tools: document.get_array("favoriteTools")
                 .map(|arr| arr.iter()
                     .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect())
+                .unwrap_or_default(),
+            tool_usage_details: document.get_array("toolUsageDetails")
+                .map(|arr| arr.iter()
+                    .filter_map(|v| {
+                        if let Some(doc) = v.as_document() {
+                            Some(ToolUsageDetail {
+                                tool_id: doc.get_i32("toolId").unwrap_or(0),
+                                tool_name: doc.get_str("toolName").unwrap_or("未知工具").to_string(),
+                                click_count: doc.get_i64("clickCount").unwrap_or(0),
+                                total_usage_time: doc.get_i64("totalUsageTime").unwrap_or(0),
+                                last_used_at: doc.get_datetime("lastUsedAt")
+                                    .map(|dt| dt.try_to_rfc3339_string().unwrap_or_default())
+                                    .unwrap_or("未知时间".to_string()),
+                            })
+                        } else {
+                            None
+                        }
+                    })
                     .collect())
                 .unwrap_or_default(),
         };
@@ -1657,6 +1758,51 @@ pub async fn clear_test_data(
                tool_usage_result.deleted_count, sessions_result.deleted_count))
 }
 
+// 调试tool_usage集合的数据
+#[tauri::command]
+pub async fn debug_tool_usage_data(
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    println!("🔍 [debug_tool_usage_data] 开始检查tool_usage数据...");
+    let mongo = state.mongo.read().await;
+    
+    // 查看tool_usage集合的文档
+    let cursor = mongo.tool_usage().find(doc! {}).limit(10).await.map_err(|e| format!("查询tool_usage失败: {}", e))?;
+    let tool_usage_records: Vec<ToolUsage> = cursor.try_collect().await.map_err(|e| format!("收集tool_usage失败: {}", e))?;
+    
+    let mut debug_info = String::new();
+    debug_info.push_str("🔧 Tool Usage 数据调试:\n\n");
+    
+    debug_info.push_str(&format!("📊 总记录数: {}\n\n", tool_usage_records.len()));
+    
+    for (i, record) in tool_usage_records.iter().enumerate().take(5) {
+        debug_info.push_str(&format!("📝 记录 {}: \n", i + 1));
+        debug_info.push_str(&format!("   用户ID: {:?}\n", record.user_id));
+        debug_info.push_str(&format!("   工具ID: {}\n", record.tool_id));
+        debug_info.push_str(&format!("   工具名称: {}\n", record.tool_name));
+        debug_info.push_str(&format!("   点击次数: {}\n", record.click_count));
+        debug_info.push_str(&format!("   总使用时长: {}\n", record.total_usage_time));
+        debug_info.push_str(&format!("   最后使用时间: {:?}\n", record.last_used_at));
+        debug_info.push_str("\n");
+    }
+    
+    // 按用户ID统计
+    let mut user_stats = std::collections::HashMap::new();
+    for record in &tool_usage_records {
+        let user_id_str = record.user_id.to_hex();
+        let entry = user_stats.entry(user_id_str.clone()).or_insert((0i64, 0i64));
+        entry.0 += record.click_count;
+        entry.1 += record.total_usage_time;
+    }
+    
+    debug_info.push_str("👥 按用户统计:\n");
+    for (user_id, (clicks, time)) in user_stats {
+        debug_info.push_str(&format!("   用户 {}: 总点击={}, 总时长={}\n", user_id, clicks, time));
+    }
+    
+    Ok(debug_info)
+}
+
 // 调试API - 查看用户表的实际数据结构
 #[tauri::command]
 pub async fn debug_user_data(
@@ -1689,6 +1835,57 @@ pub async fn debug_user_data(
     
     println!("🎯 [debug_user_data] 调试信息收集完成");
     Ok(debug_info)
+}
+
+// 修复tool_usage集合中的clickCount字段
+#[tauri::command]
+pub async fn fix_tool_usage_click_counts(
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    println!("🔧 [fix_tool_usage_click_counts] 开始修复tool_usage的clickCount字段...");
+    let mongo = state.mongo.read().await;
+    
+    // 查看当前tool_usage记录
+    let cursor = mongo.tool_usage().find(doc! {}).await.map_err(|e| format!("查询tool_usage失败: {}", e))?;
+    let records: Vec<ToolUsage> = cursor.try_collect().await.map_err(|e| format!("收集tool_usage失败: {}", e))?;
+    
+    println!("📊 [fix_tool_usage_click_counts] 找到 {} 条tool_usage记录", records.len());
+    
+    let mut fixed_count = 0;
+    let mut records_with_zero_clicks = 0;
+    
+    for record in &records {
+        println!("🔍 [fix_tool_usage_click_counts] 检查记录: 工具{}({}) - 点击:{}, 时长:{}", 
+                 record.tool_name, record.tool_id, record.click_count, record.total_usage_time);
+        
+        if record.click_count == 0 && record.total_usage_time > 0 {
+            records_with_zero_clicks += 1;
+            // 根据使用时长估算点击次数 (假设每次点击平均使用5分钟=300秒)
+            let estimated_clicks = std::cmp::max(1, record.total_usage_time / 300);
+            
+            let result = mongo.tool_usage()
+                .update_one(
+                    doc! {"_id": record.id.unwrap()},
+                    doc! {"$set": {"clickCount": estimated_clicks}}
+                )
+                .await
+                .map_err(|e| format!("更新clickCount失败: {}", e))?;
+            
+            if result.modified_count > 0 {
+                fixed_count += 1;
+                println!("✅ [fix_tool_usage_click_counts] 修复记录: {} - 设置点击次数为 {}", 
+                         record.tool_name, estimated_clicks);
+            }
+        }
+    }
+    
+    println!("🎯 [fix_tool_usage_click_counts] 修复完成！");
+    println!("   总记录数: {}", records.len());
+    println!("   零点击记录数: {}", records_with_zero_clicks);
+    println!("   成功修复数: {}", fixed_count);
+    
+    Ok(format!("✅ tool_usage点击次数修复完成！\n总记录数: {}\n零点击记录数: {}\n成功修复数: {}", 
+               records.len(), records_with_zero_clicks, fixed_count))
 }
 
 // 初始化用户登录计数 - 为现有用户添加缺失字段

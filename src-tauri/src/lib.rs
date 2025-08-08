@@ -114,6 +114,8 @@ pub fn run() {
       auth::generate_test_data,
       auth::clear_test_data,
       auth::debug_user_data,
+      auth::debug_tool_usage_data,
+      auth::fix_tool_usage_click_counts,
       auth::init_user_login_counts,
       auth::create_user,
       auth::edit_user,

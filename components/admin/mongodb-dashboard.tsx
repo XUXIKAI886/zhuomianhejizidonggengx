@@ -45,6 +45,14 @@ interface PopularTool {
   uniqueUsers: number
 }
 
+interface ToolUsageDetail {
+  toolId: number
+  toolName: string
+  clickCount: number
+  totalUsageTime: number
+  lastUsedAt: string
+}
+
 interface UserAnalytics {
   id: string
   username: string
@@ -56,6 +64,7 @@ interface UserAnalytics {
   lastLoginAt?: string
   createdAt: string
   favoriteTools: string[]
+  toolUsageDetails: ToolUsageDetail[]
 }
 
 interface DailyGrowth {
@@ -451,8 +460,33 @@ export function MongoDBDashboard() {
                           <Badge variant={user.role === 'admin' ? 'destructive' : 'outline'}>
                             {user.role === 'admin' ? '管理员' : '用户'}
                           </Badge>
-                          <span>最爱工具: {user.favoriteTools && user.favoriteTools.length > 0 ? user.favoriteTools.slice(0, 2).join(', ') : '暂无数据'}</span>
+                          <span>使用工具: {user.toolUsageDetails.length} 个</span>
                         </div>
+                        {/* 显示详细的工具使用统计 */}
+                        {user.toolUsageDetails.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs text-gray-400 font-medium">工具使用详情:</p>
+                            <div className="grid grid-cols-1 gap-1 max-h-32 overflow-y-auto">
+                              {user.toolUsageDetails.slice(0, 10).map((tool, toolIndex) => (
+                                <div key={`${user.id}-tool-${tool.toolId}`} className="flex justify-between items-center text-xs bg-gray-50 rounded px-2 py-1">
+                                  <span className="font-medium text-gray-700 truncate max-w-[200px]" title={tool.toolName}>
+                                    {tool.toolName}
+                                  </span>
+                                  <div className="flex items-center space-x-2 text-gray-500">
+                                    <span>{tool.clickCount}次</span>
+                                    <span>|</span>
+                                    <span>{formatUsageTime(tool.totalUsageTime)}</span>
+                                  </div>
+                                </div>
+                              ))}
+                              {user.toolUsageDetails.length > 10 && (
+                                <div className="text-xs text-gray-400 text-center py-1">
+                                  还有 {user.toolUsageDetails.length - 10} 个工具...
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">

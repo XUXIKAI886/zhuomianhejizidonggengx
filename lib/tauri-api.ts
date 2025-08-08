@@ -179,20 +179,34 @@ export const apiCall = async (command: string, args?: any): Promise<any> => {
 
   // 检测当前环境
   const inTauriEnv = isTauriEnvironment()
-  
-  console.log(`🌍 Environment Detection:`, { 
-    inTauriEnv, 
+
+  console.log(`🌍 Environment Detection:`, {
+    inTauriEnv,
     protocol: typeof window !== 'undefined' ? window.location?.protocol : 'server',
-    hostname: typeof window !== 'undefined' ? window.location?.hostname : 'server'
+    hostname: typeof window !== 'undefined' ? window.location?.hostname : 'server',
+    userAgent: typeof window !== 'undefined' ? window.navigator?.userAgent : 'server'
   })
 
   // 只使用Tauri后端
   if (inTauriEnv) {
     console.log(`📱 Using Tauri backend for: ${command}`)
-    const result = await safeInvoke(command, args)
-    console.log(`✅ Tauri success for ${command}:`, result)
-    return result
+    try {
+      const result = await safeInvoke(command, args)
+      console.log(`✅ Tauri success for ${command}:`, result)
+      return result
+    } catch (error) {
+      console.error(`❌ Tauri invoke failed for ${command}:`, error)
+      throw error
+    }
   } else {
-    throw new Error(`不在Tauri环境中，无法调用命令: ${command}`)
+    const errorMsg = `不在Tauri环境中，无法调用命令: ${command}`
+    console.error(`❌ ${errorMsg}`)
+    console.error(`🔍 环境检测详情:`, {
+      window: typeof window,
+      location: typeof window !== 'undefined' ? window.location : null,
+      __TAURI__: typeof window !== 'undefined' ? !!(window as any).__TAURI__ : false,
+      __TAURI_IPC__: typeof window !== 'undefined' ? !!(window as any).__TAURI_IPC__ : false
+    })
+    throw new Error(errorMsg)
   }
 }

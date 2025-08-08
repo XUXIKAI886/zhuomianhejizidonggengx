@@ -5,15 +5,59 @@ import { cn } from "@/lib/utils"
 import { Layers, TrendingUp, Palette, ShoppingCart, Users, MessageCircle, Star, Zap } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { WeatherWidget } from "@/components/weather-widget"
+import { getCategoryStats, getToolsByCategory } from "@/lib/tool-data"
 
-const categories = [
-  { id: "all", name: "全部工具", icon: Layers, count: 20, color: "from-gray-300 to-gray-400" },
-  { id: "operations", name: "运营工具", icon: TrendingUp, count: 11, color: "from-blue-300 to-blue-400", hot: true },
-  { id: "design", name: "美工工具", icon: Palette, count: 2, color: "from-purple-300 to-purple-400" },
-  { id: "sales", name: "销售工具", icon: ShoppingCart, count: 2, color: "from-emerald-300 to-emerald-400" },
-  { id: "hr", name: "人事工具", icon: Users, count: 4, color: "from-amber-300 to-amber-400" },
-  { id: "service", name: "客服工具", icon: MessageCircle, count: 1, color: "from-rose-300 to-rose-400", new: true },
-]
+// 动态获取分类数据
+const getCategoriesWithCounts = () => {
+  const categoryStats = getCategoryStats()
+
+  return [
+    {
+      id: "all",
+      name: "全部工具",
+      icon: Layers,
+      count: categoryStats.total,
+      color: "from-gray-300 to-gray-400"
+    },
+    {
+      id: "operations",
+      name: "运营工具",
+      icon: TrendingUp,
+      count: getToolsByCategory("运营工具").length,
+      color: "from-blue-300 to-blue-400",
+      hot: true
+    },
+    {
+      id: "design",
+      name: "美工工具",
+      icon: Palette,
+      count: getToolsByCategory("美工工具").length,
+      color: "from-purple-300 to-purple-400"
+    },
+    {
+      id: "sales",
+      name: "销售工具",
+      icon: ShoppingCart,
+      count: getToolsByCategory("销售工具").length,
+      color: "from-emerald-300 to-emerald-400"
+    },
+    {
+      id: "hr",
+      name: "人事工具",
+      icon: Users,
+      count: getToolsByCategory("人事工具").length,
+      color: "from-amber-300 to-amber-400"
+    },
+    {
+      id: "service",
+      name: "客服工具",
+      icon: MessageCircle,
+      count: getToolsByCategory("客服工具").length,
+      color: "from-rose-300 to-rose-400",
+      new: true
+    },
+  ]
+}
 
 interface SidebarProps {
   activeCategory: string
@@ -21,6 +65,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeCategory, onCategoryChange }: SidebarProps) {
+  // 获取动态分类数据
+  const categories = getCategoriesWithCounts()
 
   return (
     <aside className="w-72 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-r border-gray-200/50 dark:border-gray-700/50 shadow-lg">

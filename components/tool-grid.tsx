@@ -45,11 +45,19 @@ export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGr
   const handleLaunchTool = async (tool: typeof toolsData[0]) => {
     console.log(`🎯 [前端] 用户点击工具: ${tool.name} (ID: ${tool.id})`)
     console.log(`🎯 [前端] 当前用户状态:`, state.user)
-    
+
     // 记录工具点击统计
     if (state.user) {
       try {
         console.log(`🎯 [前端] 准备调用 track_user_activity API`)
+        console.log(`🎯 [前端] 调用参数:`, {
+          userId: state.user.id,
+          activityType: 'tool_click',
+          toolId: tool.id,
+          toolName: tool.name,
+          duration: null
+        })
+
         const result = await apiCall('track_user_activity', {
           userId: state.user.id,
           activityType: 'tool_click',
@@ -60,6 +68,13 @@ export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGr
         console.log(`✅ [前端] 工具点击记录成功: ${tool.name} (ID: ${tool.id})`, result)
       } catch (error) {
         console.error(`❌ [前端] 记录工具点击失败:`, error)
+        console.error(`❌ [前端] 错误详情:`, {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          userId: state.user?.id,
+          toolId: tool.id,
+          toolName: tool.name
+        })
       }
     } else {
       console.error(`❌ [前端] 用户未登录，无法记录工具点击`)
