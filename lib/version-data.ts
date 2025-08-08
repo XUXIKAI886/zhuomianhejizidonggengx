@@ -35,7 +35,7 @@ export const versionHistory: VersionUpdate[] = [
       { icon: "file", text: "优化快速开始和部署指引" },
       { icon: "globe", text: "改进项目特色和统计数据展示" }
     ],
-    isNew: true,
+    isNew: false,
     downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.24"
   },
   {
