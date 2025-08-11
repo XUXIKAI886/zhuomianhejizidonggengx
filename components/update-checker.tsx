@@ -22,7 +22,7 @@ export function UpdateChecker() {
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [isChecking, setIsChecking] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
-  const [currentVersion, setCurrentVersion] = useState<string>('1.0.25')  // 修复：使用当前版本号
+  const [currentVersion, setCurrentVersion] = useState<string>('1.0.22')  // 修复：使用安全版本确保能检测更新
 
   // 获取当前应用版本
   const getCurrentVersion = async () => {
@@ -86,9 +86,9 @@ export function UpdateChecker() {
 
   // 检查更新
   const checkForUpdates = async (showToast = true) => {
-    // ✅ 修复异步竞态条件：确保使用最新版本号
-    const latestVersion = await getCurrentVersion()
-    console.log('CheckForUpdates使用版本号:', latestVersion)
+    // ✅ 修复异步竞态条件：确保使用当前版本号
+    const currentAppVersion = await getCurrentVersion()
+    console.log('CheckForUpdates当前应用版本号:', currentAppVersion)
     
     // ✅ 修复后的Tauri环境检测逻辑
     const isTauriEnvironment = () => {
@@ -177,7 +177,7 @@ export function UpdateChecker() {
       try {
         console.log('UpdateChecker: 使用HTTP API检查更新...')
 
-        const response = await fetch(`https://www.yujinkeji.asia/api/releases/windows-x86_64/${latestVersion}`)  // 修复：使用最新版本号
+        const response = await fetch(`https://www.yujinkeji.asia/api/releases/windows-x86_64/${currentAppVersion}`)  // 修复：使用当前应用版本号
         const data = await response.json()
 
         console.log('HTTP API响应:', data)
@@ -193,7 +193,7 @@ export function UpdateChecker() {
         } else {
           update = {
             available: false,
-            version: latestVersion  // 修复：使用最新版本号
+            version: currentAppVersion  // 修复：使用当前应用版本号
           }
           console.log('UpdateChecker: 当前已是最新版本')
         }
@@ -236,7 +236,7 @@ export function UpdateChecker() {
       } else {
         if (showToast) {
           toast.success('✅ 当前已是最新版本', {
-            description: `版本 v${latestVersion} 无需更新`,  // 修复：使用最新版本号
+            description: `版本 v${currentAppVersion} 无需更新`,  // 修复：使用当前应用版本号
             duration: 4000,
             icon: <CheckCircle className="h-4 w-4" />
           })

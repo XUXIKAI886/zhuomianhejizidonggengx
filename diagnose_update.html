@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>更新检测诊断</title>
+</head>
+<body>
+    <h1>更新检测诊断工具</h1>
+    <button onclick="testAPI()">测试API</button>
+    <button onclick="testTauriEnv()">测试Tauri环境</button>
+    <div id="output"></div>
+
+    <script>
+        async function testAPI() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<h3>API测试结果:</h3>';
+            
+            try {
+                console.log('测试API请求...');
+                const response = await fetch('https://www.yujinkeji.asia/api/releases/windows-x86_64/1.0.24');
+                const data = await response.json();
+                
+                output.innerHTML += `
+                    <p><strong>版本:</strong> ${data.version}</p>
+                    <p><strong>发布日期:</strong> ${data.pub_date}</p>
+                    <p><strong>更新说明:</strong> ${data.notes}</p>
+                    <p><strong>平台信息:</strong> ${JSON.stringify(data.platforms, null, 2)}</p>
+                    <p><strong>是否有更新:</strong> ${data.platforms && Object.keys(data.platforms).length > 0 ? '是' : '否'}</p>
+                `;
+                
+                console.log('API响应:', data);
+            } catch (error) {
+                output.innerHTML += `<p style="color: red;"><strong>错误:</strong> ${error}</p>`;
+                console.error('API请求失败:', error);
+            }
+        }
+        
+        function testTauriEnv() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<h3>Tauri环境检测:</h3>';
+            
+            const checks = [
+                { name: '__TAURI_INTERNALS__', value: !!window.__TAURI_INTERNALS__ },
+                { name: '__TAURI__', value: !!window.__TAURI__ },
+                { name: '__TAURI_INVOKE__', value: typeof window.__TAURI_INVOKE__ },
+                { name: 'protocol', value: window.location.protocol },
+                { name: 'host', value: window.location.host },
+                { name: 'userAgent', value: navigator.userAgent.includes('Tauri') }
+            ];
+            
+            checks.forEach(check => {
+                output.innerHTML += `<p><strong>${check.name}:</strong> ${check.value}</p>`;
+            });
+            
+            const isTauri = checks.some(check => 
+                check.name === '__TAURI_INTERNALS__' && check.value ||
+                check.name === '__TAURI__' && check.value ||
+                check.name === '__TAURI_INVOKE__' && check.value === 'function'
+            );
+            
+            output.innerHTML += `<p><strong>Tauri环境:</strong> ${isTauri ? '是' : '否'}</p>`;
+            
+            console.log('Tauri环境检测结果:', checks);
+        }
+    </script>
+</body>
+</html>
