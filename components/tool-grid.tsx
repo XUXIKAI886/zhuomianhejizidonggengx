@@ -33,13 +33,19 @@ export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGr
 
   // 筛选工具
   const filteredTools = toolsData.filter(tool => {
-    const categoryMatch = category === "全部工具" || tool.category === category
-    const searchMatch = searchQuery === "" || 
-      tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tool.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tool.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-    
-    return categoryMatch && searchMatch
+    // 如果有搜索查询，优先按搜索结果筛选
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      return (
+        tool.name.toLowerCase().includes(query) ||
+        tool.description.toLowerCase().includes(query) ||
+        tool.category.toLowerCase().includes(query) ||
+        tool.tags.some(tag => tag.toLowerCase().includes(query))
+      )
+    }
+
+    // 没有搜索查询时，按分类筛选
+    return category === "全部工具" || tool.category === category
   })
 
   const handleLaunchTool = async (tool: typeof toolsData[0]) => {
@@ -102,16 +108,42 @@ export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGr
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <AlertCircle className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">未找到相关工具</h3>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-gray-500 dark:text-gray-400 mb-4">
           {searchQuery ? `没有找到包含 "${searchQuery}" 的工具` : `${category} 分类下暂无工具`}
         </p>
+        {searchQuery && (
+          <div className="text-sm text-gray-400 dark:text-gray-500">
+            <p>搜索建议：</p>
+            <ul className="mt-2 space-y-1">
+              <li>• 尝试使用不同的关键词</li>
+              <li>• 检查拼写是否正确</li>
+              <li>• 使用更通用的搜索词</li>
+              <li>• 尝试搜索工具分类：运营、美工、销售、人事、客服</li>
+            </ul>
+          </div>
+        )}
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredTools.map((tool) => {
+    <div className="space-y-4">
+      {/* 搜索结果统计 */}
+      {searchQuery && (
+        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg px-4 py-2 border border-blue-200/30 dark:border-blue-800/30">
+          <span>
+            找到 <span className="font-semibold text-blue-600 dark:text-blue-400">{filteredTools.length}</span> 个相关工具
+          </span>
+          {filteredTools.length > 0 && (
+            <span className="text-xs">
+              匹配关键词: <span className="font-medium">"{searchQuery}"</span>
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredTools.map((tool) => {
         const Icon = tool.icon
         const isLaunching = launchingTool === tool.id
         
@@ -195,6 +227,7 @@ export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGr
           </Card>
         )
       })}
+      </div>
 
       {/* WebView Modal */}
       <WebViewModal

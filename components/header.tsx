@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Settings, Moon, Sun, User, Bell, LogOut, UserCircle } from "lucide-react"
+import { Search, Settings, Moon, Sun, User, Bell, LogOut, UserCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -19,7 +19,12 @@ import { UpdateChecker } from "./update-checker"
 import { VersionNotifications } from "./version-notifications"
 import { useAuth } from "@/lib/auth/auth-context"
 
-export function Header() {
+interface HeaderProps {
+  searchQuery?: string
+  onSearchChange?: (query: string) => void
+}
+
+export function Header({ searchQuery = "", onSearchChange }: HeaderProps) {
   const { theme, setTheme } = useTheme()
   const { state, logout } = useAuth()
   const router = useRouter()
@@ -28,6 +33,33 @@ export function Header() {
   // 避免水合不匹配
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  // 处理搜索输入
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    onSearchChange?.(value)
+  }
+
+  // 清除搜索
+  const handleClearSearch = () => {
+    onSearchChange?.("")
+  }
+
+  // 处理键盘快捷键 Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        const searchInput = document.querySelector('input[placeholder*="搜索工具"]') as HTMLInputElement
+        if (searchInput) {
+          searchInput.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   const toggleTheme = () => {
@@ -74,9 +106,21 @@ export function Header() {
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5 group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400 transition-colors" />
                 <Input
                   placeholder="搜索工具、分类或功能..."
-                  className="pl-12 pr-4 h-11 bg-gray-50/80 dark:bg-gray-800/80 border-gray-200/50 dark:border-gray-600/50 focus:bg-white dark:focus:bg-gray-700 focus:border-blue-300 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/20 rounded-xl transition-all duration-200 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="pl-12 pr-20 h-11 bg-gray-50/80 dark:bg-gray-800/80 border-gray-200/50 dark:border-gray-600/50 focus:bg-white dark:focus:bg-gray-700 focus:border-blue-300 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/20 rounded-xl transition-all duration-200 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                  {searchQuery && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearSearch}
+                      className="h-6 w-6 p-0 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full"
+                    >
+                      <X className="w-3 h-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                    </Button>
+                  )}
                   <Badge variant="secondary" className="text-xs px-2 py-1">
                     Ctrl+K
                   </Badge>

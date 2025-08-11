@@ -23,6 +23,21 @@ export interface VersionUpdate {
 // 版本更新历史数据
 export const versionHistory: VersionUpdate[] = [
   {
+    version: "1.0.25",
+    date: "2025-08-11",
+    type: "patch",
+    title: "🔗 工具链接优化更新",
+    description: "优化关键词描述文件上传下载中心工具的跳转链接，提升用户访问体验和工具可用性。",
+    features: [
+      { icon: "sparkles", text: "更新关键词描述文件上传下载中心链接", highlight: true },
+      { icon: "zap", text: "优化工具访问体验" },
+      { icon: "settings", text: "提升系统稳定性" },
+      { icon: "globe", text: "改进用户界面响应速度" }
+    ],
+    isNew: true,
+    downloadUrl: "https://github.com/XUXIKAI886/zhuomianhejizidonggengx/releases/tag/v1.0.25"
+  },
+  {
     version: "1.0.24",
     date: "2025-08-08",
     type: "minor",

@@ -19,6 +19,7 @@ import {
   PieChart,
   Search,
   Scissors,
+  Upload,
 } from "lucide-react"
 import { Tool } from "@/types/tools"
 
@@ -341,6 +342,22 @@ export const toolsData: Tool[] = [
     tags: ["图片分割", "批量处理", "格式转换", "运营素材"],
     color: "from-blue-300 to-blue-400",
     featured: false,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  // 新增第22个工具
+  {
+    id: 22,
+    name: "关键词描述文件上传下载中心",
+    description: "专业的文件上传下载管理平台，支持关键词标记和描述管理",
+    category: "运营工具",
+    url: "https://www.csch.uno/",
+    icon: Upload,
+    rating: 4.7,
+    downloads: "1.2k",
+    tags: ["文件上传", "关键词管理", "文件分享", "云存储"],
+    color: "from-blue-300 to-blue-400",
+    featured: true,
     lastUpdated: "今天",
     toolType: "web"
   }

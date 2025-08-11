@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目架构概述
 
-这是一个基于Tauri 2.x + Next.js 15的桌面应用"呈尚策划工具中心"，集成20个专业工具，包含完整的用户认证系统和MongoDB数据库集成。
+这是一个基于Tauri 2.x + Next.js 15的桌面应用"呈尚策划工具中心"，集成22个专业工具，包含完整的用户认证系统和MongoDB数据库集成。
 
 ### 核心技术栈
 - **前端**: Next.js 15 + React 19 + TypeScript + Tailwind CSS
@@ -119,8 +119,8 @@ types/                       # TypeScript类型定义
 ## 工具数据管理
 
 ### 工具配置中心 (`lib/tool-data.ts`)
-包含20个工具的完整信息，按业务类型组织:
-- 11个运营工具 (商家回复解答手册、美团运营知识、外卖数周报系统等)
+包含22个工具的完整信息，按业务类型组织:
+- 13个运营工具 (商家回复解答手册、美团运营知识、外卖数周报系统、图片墙图片分割、文件上传下载中心等)
 - 2个美工工具 (图片采集、数据处理)
 - 2个销售工具 (数据统计、报告生成)
 - 4个人事工具 (财务记账、排班系统等)
@@ -191,12 +191,12 @@ types/                       # TypeScript类型定义
 
 ### 功能验证
 - 登录系统: Web版本和桌面版本一致性
-- 工具启动: 20个工具URL可访问性
+- 工具启动: 22个工具URL可访问性
 - 数据统计: MongoDB聚合查询正确性
 - 用户管理: CRUD操作完整性
 
 ### 版本发布
-- 版本号同步: package.json + tauri.conf.json (当前: package.json v1.0.17, tauri.conf.json v1.0.22)
+- 版本号同步: package.json + tauri.conf.json (当前: package.json v1.0.23, tauri.conf.json v1.0.24)
 - 构建验证: 测试桌面应用启动和功能
 - 更新检测: 验证自动更新服务器响应
 - 版本发布脚本: `scripts/release-version.bat` 和 `scripts/update-version.js`
@@ -219,3 +219,24 @@ types/                       # TypeScript类型定义
 - `app/page.tsx` - 主页面布局
 - `components/tool-grid.tsx` - 工具展示网格
 - `components/web-view-modal.tsx` - 工具启动界面
+
+## 开发最佳实践
+
+### 代码修改原则
+- **工具数据修改**: 只能在 `lib/tool-data.ts` 中修改工具信息，不要直接修改组件中的硬编码数据
+- **数据库操作**: 必须通过 `DatabaseService` 类进行，保持数据访问的统一性
+- **Tauri API调用**: 使用 `lib/tauri-api.ts` 中封装的方法，避免直接调用原生API
+- **环境检测**: 使用 `isTauriEnvironment()` 函数判断运行环境
+
+### 重要开发注意事项
+- **版本同步**: 修改版本号时必须同时更新 `package.json` 和 `src-tauri/tauri.conf.json`
+- **MongoDB连接**: 数据库连接字符串存在两处，修改时需保持同步：
+  - `lib/database.ts:5`
+  - `src-tauri/src/auth.rs` 
+- **密码加密**: 前后端使用不同但兼容的加密方式，修改时需确保兼容性
+- **端口配置**: 开发服务器默认使用3000端口，Tauri配置中的端口必须匹配
+
+### 调试和测试
+- **数据库测试**: 使用 `node scripts/test-token-auth.js` 测试认证系统
+- **API测试**: Web环境和桌面环境都需要分别测试
+- **版本测试**: 使用 `scripts/verify-api-server.ps1` 验证更新服务器状态

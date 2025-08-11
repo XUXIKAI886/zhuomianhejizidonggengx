@@ -9,10 +9,21 @@ import { useState } from "react"
 
 export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState("全部工具")
+  const [searchQuery, setSearchQuery] = useState("")
+
+  // 处理搜索查询变化
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+    // 如果有搜索内容，自动切换到"全部工具"以显示所有匹配结果
+    if (query.trim() && activeCategory !== "全部工具") {
+      setActiveCategory("全部工具")
+    }
+  }
+
   return (
     <AuthGuard>
       <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-gray-900 dark:via-gray-800/30 dark:to-gray-900/50">
-      <Header />
+      <Header searchQuery={searchQuery} onSearchChange={handleSearchChange} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
         <main className="flex-1 overflow-auto">
@@ -51,14 +62,14 @@ export default function HomePage() {
               <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    {activeCategory === "全部工具" ? "精选工具" : activeCategory}
+                    {searchQuery ? `搜索结果: "${searchQuery}"` : (activeCategory === "全部工具" ? "精选工具" : activeCategory)}
                   </h2>
                   <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     <span>实时更新</span>
                   </div>
                 </div>
-                <ToolGrid category={activeCategory} />
+                <ToolGrid category={activeCategory} searchQuery={searchQuery} />
               </div>
             </div>
           </div>

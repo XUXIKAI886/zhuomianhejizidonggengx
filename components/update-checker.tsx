@@ -22,7 +22,7 @@ export function UpdateChecker() {
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [isChecking, setIsChecking] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
-  const [currentVersion, setCurrentVersion] = useState<string>('1.0.22')  // 修复：使用安全版本确保能检测更新
+  const [currentVersion, setCurrentVersion] = useState<string>('1.0.25')  // 修复：使用当前版本号
 
   // 获取当前应用版本
   const getCurrentVersion = async () => {

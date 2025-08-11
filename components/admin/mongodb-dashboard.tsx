@@ -12,19 +12,21 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Area, AreaChart, Legend
 } from 'recharts'
-import { 
-  Database, 
-  Users, 
-  Activity, 
-  Clock, 
-  TrendingUp, 
+import {
+  Database,
+  Users,
+  Activity,
+  Clock,
+  TrendingUp,
   BarChart3,
   PieChart as PieChartIcon,
   Calendar,
   Zap,
   Bug,
-  RefreshCw
+  RefreshCw,
+  Copy
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 // 数据类型定义
 interface SystemAnalytics {
@@ -204,6 +206,60 @@ export function MongoDBDashboard() {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
     return num.toString()
+  }
+
+  // 复制用户工具使用详情到剪切板
+  const handleCopyUserToolDetails = async (user: UserAnalytics) => {
+    try {
+      // 动态计算总点击次数
+      const calculatedTotalClicks = user.toolUsageDetails.reduce((total, tool) => total + tool.clickCount, 0)
+
+      // 构建用户工具使用详情文本
+      let detailsText = `用户: ${user.username} (${user.role === 'admin' ? '管理员' : '用户'})\n`
+      detailsText += `总点击次数: ${calculatedTotalClicks}\n`
+      detailsText += `总使用时长: ${formatUsageTime(user.totalUsageTime)}\n`
+      detailsText += `登录次数: ${user.loginCount}\n`
+      detailsText += `使用工具数量: ${user.toolUsageDetails.length} 个\n\n`
+
+      detailsText += `工具使用详情:\n`
+      detailsText += `${'='.repeat(50)}\n`
+
+      user.toolUsageDetails.forEach((tool, index) => {
+        detailsText += `${index + 1}. ${tool.toolName}\n`
+        detailsText += `   点击次数: ${tool.clickCount} 次\n`
+        detailsText += `   使用时长: ${formatUsageTime(tool.totalUsageTime)}\n`
+        detailsText += `   最后使用: ${tool.lastUsedAt ? new Date(tool.lastUsedAt).toLocaleString('zh-CN') : '未知'}\n\n`
+      })
+
+      detailsText += `${'='.repeat(50)}\n`
+      detailsText += `导出时间: ${new Date().toLocaleString('zh-CN')}\n`
+      detailsText += `数据来源: 呈尚策划工具箱 - MongoDB数据库`
+
+      // 复制到剪切板
+      await navigator.clipboard.writeText(detailsText)
+      toast.success(`已复制 ${user.username} 的工具使用详情到剪切板`)
+    } catch (error) {
+      console.error('复制失败:', error)
+
+      // 备用方案：创建临时textarea元素
+      const textArea = document.createElement('textarea')
+      textArea.value = detailsText
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-999999px'
+      textArea.style.top = '-999999px'
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+
+      try {
+        document.execCommand('copy')
+        toast.success(`已复制 ${user.username} 的工具使用详情到剪切板`)
+      } catch (fallbackError) {
+        toast.error('复制失败，请手动复制')
+      }
+
+      document.body.removeChild(textArea)
+    }
   }
 
   if (loading) {
@@ -448,55 +504,73 @@ export function MongoDBDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {userAnalytics.slice(0, 10).map((user, index) => (
-                  <div key={user.id || `user-${index}`} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center space-x-4">
-                      <Badge variant={index < 3 ? "default" : "secondary"}>
-                        #{index + 1}
-                      </Badge>
-                      <div>
-                        <p className="font-medium">{user.username}</p>
-                        <div className="flex items-center space-x-2 text-sm text-gray-500">
-                          <Badge variant={user.role === 'admin' ? 'destructive' : 'outline'}>
-                            {user.role === 'admin' ? '管理员' : '用户'}
+                {userAnalytics.slice(0, 10).map((user, index) => {
+                  // 动态计算总点击次数：所有工具点击次数的总和
+                  const calculatedTotalClicks = user.toolUsageDetails.reduce((total, tool) => total + tool.clickCount, 0)
+
+                  return (
+                    <div key={user.id || `user-${index}`} className="border rounded-lg hover:bg-gray-50 transition-colors">
+                      {/* 用户基本信息和复制按钮 */}
+                      <div className="flex items-center justify-between p-4 border-b">
+                        <div className="flex items-center space-x-4">
+                          <Badge variant={index < 3 ? "default" : "secondary"}>
+                            #{index + 1}
                           </Badge>
-                          <span>使用工具: {user.toolUsageDetails.length} 个</span>
-                        </div>
-                        {/* 显示详细的工具使用统计 */}
-                        {user.toolUsageDetails.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            <p className="text-xs text-gray-400 font-medium">工具使用详情:</p>
-                            <div className="grid grid-cols-1 gap-1 max-h-32 overflow-y-auto">
-                              {user.toolUsageDetails.slice(0, 10).map((tool, toolIndex) => (
-                                <div key={`${user.id}-tool-${tool.toolId}`} className="flex justify-between items-center text-xs bg-gray-50 rounded px-2 py-1">
-                                  <span className="font-medium text-gray-700 truncate max-w-[200px]" title={tool.toolName}>
-                                    {tool.toolName}
-                                  </span>
-                                  <div className="flex items-center space-x-2 text-gray-500">
-                                    <span>{tool.clickCount}次</span>
-                                    <span>|</span>
-                                    <span>{formatUsageTime(tool.totalUsageTime)}</span>
-                                  </div>
-                                </div>
-                              ))}
-                              {user.toolUsageDetails.length > 10 && (
-                                <div className="text-xs text-gray-400 text-center py-1">
-                                  还有 {user.toolUsageDetails.length - 10} 个工具...
-                                </div>
-                              )}
+                          <div>
+                            <p className="font-medium">{user.username}</p>
+                            <div className="flex items-center space-x-2 text-sm text-gray-500">
+                              <Badge variant={user.role === 'admin' ? 'destructive' : 'outline'}>
+                                {user.role === 'admin' ? '管理员' : '用户'}
+                              </Badge>
+                              <span>使用工具: {user.toolUsageDetails.length} 个</span>
                             </div>
                           </div>
-                        )}
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <div className="text-right">
+                            <p className="font-medium text-blue-600">{formatNumber(calculatedTotalClicks)} 次点击</p>
+                            <p className="text-sm text-gray-500">
+                              {formatUsageTime(user.totalUsageTime)} | {user.loginCount} 次登录
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCopyUserToolDetails(user)}
+                            className="flex items-center gap-2"
+                          >
+                            <Copy className="w-4 h-4" />
+                            复制详情
+                          </Button>
+                        </div>
                       </div>
+
+                      {/* 显示所有工具使用详情 */}
+                      {user.toolUsageDetails.length > 0 && (
+                        <div className="p-4">
+                          <p className="text-xs text-gray-400 font-medium mb-2">工具使用详情:</p>
+                          <div className="grid grid-cols-1 gap-1 max-h-64 overflow-y-auto">
+                            {user.toolUsageDetails.map((tool, toolIndex) => (
+                              <div key={`${user.id}-tool-${tool.toolId}`} className="flex justify-between items-center text-xs bg-gray-50 rounded px-2 py-1">
+                                <span className="font-medium text-gray-700 truncate max-w-[300px]" title={tool.toolName}>
+                                  {toolIndex + 1}. {tool.toolName}
+                                </span>
+                                <div className="flex items-center space-x-2 text-gray-500">
+                                  <span>{tool.clickCount}次</span>
+                                  <span>|</span>
+                                  <span>{formatUsageTime(tool.totalUsageTime)}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-2 text-xs text-gray-400 text-center">
+                            共 {user.toolUsageDetails.length} 个工具
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-blue-600">{formatNumber(user.totalToolClicks)} 次点击</p>
-                      <p className="text-sm text-gray-500">
-                        {formatUsageTime(user.totalUsageTime)} | {user.loginCount} 次登录
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </CardContent>
           </Card>
