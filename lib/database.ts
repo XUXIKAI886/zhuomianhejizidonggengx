@@ -74,7 +74,10 @@ export interface PopularTool {
 export function hashPassword(password: string): string {
   const salt = 'chengshang2025'
   const crypto = require('crypto')
-  return crypto.createHash('sha256').update(password + salt).digest('hex')
+  const hasher = crypto.createHash('sha256')
+  hasher.update(password)  // 先更新密码
+  hasher.update(salt)      // 再更新盐值，与Rust后端保持一致
+  return hasher.digest('hex')
 }
 
 // 验证密码

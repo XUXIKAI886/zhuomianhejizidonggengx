@@ -1851,13 +1851,13 @@ pub async fn debug_user_data(
 ) -> Result<String, String> {
     println!("🔍 [debug_user_data] 开始检查用户数据结构...");
     let mongo = state.mongo.read().await;
-    
+
     let cursor = mongo.users().find(doc! {}).await.map_err(|e| format!("查询用户失败: {}", e))?;
     let users: Vec<User> = cursor.try_collect().await.map_err(|e| format!("收集用户失败: {}", e))?;
-    
+
     let mut debug_info = String::new();
     debug_info.push_str("📊 用户数据调试信息:\n\n");
-    
+
     for user in &users {
         debug_info.push_str(&format!("👤 用户: {}\n", user.username));
         debug_info.push_str(&format!("   ID: {:?}\n", user.id));
@@ -1867,13 +1867,14 @@ pub async fn debug_user_data(
         debug_info.push_str(&format!("   总使用时长: {}\n", user.total_usage_time));
         debug_info.push_str(&format!("   最后登录: {:?}\n", user.last_login_at));
         debug_info.push_str(&format!("   创建时间: {:?}\n", user.created_at));
+        debug_info.push_str(&format!("   密码哈希: {}\n", user.password)); // 添加密码哈希显示
         debug_info.push_str("\n");
-        
-        println!("👤 [debug_user_data] 用户: {} - 登录次数: {}", user.username, user.login_count);
+
+        println!("👤 [debug_user_data] 用户: {} - 登录次数: {} - 密码哈希: {}", user.username, user.login_count, user.password);
     }
-    
+
     debug_info.push_str(&format!("总用户数: {}\n", users.len()));
-    
+
     println!("🎯 [debug_user_data] 调试信息收集完成");
     Ok(debug_info)
 }
