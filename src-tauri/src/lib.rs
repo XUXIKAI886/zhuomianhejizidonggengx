@@ -57,6 +57,100 @@ async fn open_url(url: String) -> Result<String, String> {
   }
 }
 
+// 创建无装饰窗口（隐藏地址栏）
+#[tauri::command]
+async fn create_kiosk_window(
+  app: tauri::AppHandle,
+  url: String,
+  title: String
+) -> Result<String, String> {
+  use tauri::{WebviewUrl, WebviewWindowBuilder};
+  
+  let window_label = format!("kiosk_{}", chrono::Utc::now().timestamp_millis());
+  
+  // 创建带有CSS注入的HTML页面来隐藏地址栏
+  let html_content = format!(r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        body {{
+            overflow: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+        }}
+        iframe {{
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            display: block;
+        }}
+        /* 隐藏所有可能的浏览器UI元素 */
+        ::-webkit-scrollbar {{ display: none; }}
+        html {{ scrollbar-width: none; }}
+    </style>
+</head>
+<body>
+    <iframe src="{}" frameborder="0" allowfullscreen></iframe>
+    <script>
+        // 阻止右键菜单
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // 阻止某些快捷键
+        document.addEventListener('keydown', e => {{
+            if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || 
+                             e.key === 'i' || e.key === 'I' ||
+                             e.key === 'j' || e.key === 'J')) {{
+                e.preventDefault();
+            }}
+            if (e.key === 'F12') {{
+                e.preventDefault();
+            }}
+        }});
+        
+        // 全屏模式
+        if (document.documentElement.requestFullscreen) {{
+            document.documentElement.requestFullscreen().catch(() => {{}});
+        }}
+    </script>
+</body>
+</html>
+"#, title, url);
+
+  // 创建临时HTML文件
+  let temp_dir = std::env::temp_dir();
+  let temp_file = temp_dir.join(format!("{}.html", window_label));
+  
+  match std::fs::write(&temp_file, html_content) {
+    Ok(_) => {
+      let file_url = format!("file:///{}", temp_file.to_string_lossy().replace("\\", "/"));
+      
+      match WebviewWindowBuilder::new(
+        &app,
+        &window_label,
+        WebviewUrl::External(file_url.parse().map_err(|e| format!("无效的URL: {}", e))?)
+      )
+      .title(&title)
+      .inner_size(1200.0, 800.0)
+      .decorations(false)
+      .resizable(true)
+      .center()
+      .build()
+      {
+        Ok(_) => Ok(format!("已在无地址栏窗口打开: {}", title)),
+        Err(e) => Err(format!("创建窗口失败: {}", e))
+      }
+    },
+    Err(e) => Err(format!("创建临时文件失败: {}", e))
+  }
+}
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -103,6 +197,7 @@ pub fn run() {
       open_devtools,
       get_debug_info,
       open_url,
+      create_kiosk_window,
       auth::login,
       auth::logout,
       auth::check_session,
