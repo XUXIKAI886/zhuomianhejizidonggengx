@@ -799,13 +799,21 @@ pub async fn track_user_activity(
 pub async fn get_user_analytics(
     state: tauri::State<'_, AppState>,
     limit: Option<i64>,
+    include_inactive: Option<bool>,
 ) -> Result<Vec<UserAnalytics>, String> {
-    println!("🔍 [get_user_analytics] 开始获取用户分析数据，限制: {:?}", limit);
+    println!("🔍 [get_user_analytics] 开始获取用户分析数据，限制: {:?}, 包括非活跃: {:?}", limit, include_inactive);
     let mongo = state.mongo.read().await;
+    
+    // 根据参数决定是否包含非活跃用户
+    let match_stage = if include_inactive.unwrap_or(false) {
+        doc! {} // 匹配所有用户
+    } else {
+        doc! { "isActive": true } // 只匹配活跃用户
+    };
     
     let pipeline = vec![
         doc! {
-            "$match": { "isActive": true }
+            "$match": match_stage
         },
         doc! {
             "$lookup": {

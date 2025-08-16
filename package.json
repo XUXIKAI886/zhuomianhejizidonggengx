@@ -9,7 +9,8 @@
     "start": "next start",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "tauri:build-smart": "node scripts/build-tauri.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

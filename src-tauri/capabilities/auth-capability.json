@@ -1,0 +1,44 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "auth-capability",
+  "description": "认证系统权限配置，包含用户登录、管理员功能和数据库访问",
+  "context": "local",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "core:app:default",
+    "core:webview:default",
+    "core:event:default",
+    "core:path:default",
+    "core:resources:default"
+  ],
+  "commands": {
+    "allow": [
+      "login",
+      "logout",
+      "check_session", 
+      "verify_token_and_login",
+      "get_all_users_admin",
+      "get_system_overview",
+      "get_system_analytics",
+      "get_user_analytics", 
+      "track_user_activity",
+      "create_user",
+      "edit_user",
+      "delete_user",
+      "reset_user_password",
+      "toggle_user_status",
+      "generate_test_data",
+      "clear_test_data",
+      "debug_tool_usage_data",
+      "check_raw_tool_usage_fields",
+      "debug_user_data",
+      "fix_tool_usage_click_counts",
+      "init_user_login_counts"
+    ]
+  },
+  "local": true,
+  "platforms": ["linux", "macOS", "windows"]
+}

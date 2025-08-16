@@ -100,11 +100,15 @@ export function MongoDBDashboard() {
       
       const [systemData, userData] = await Promise.all([
         apiCall('get_system_analytics'),
-        apiCall('get_user_analytics', { limit: 20 })
+        apiCall('get_user_analytics', { limit: 50, includeInactive: true }) // 增加限制到50个用户，包括非活跃用户
       ])
 
       setAnalytics(systemData)
       setUserAnalytics(userData)
+      
+      // 调试信息：显示实际获取的用户数量
+      console.log(`🔍 [MongoDB Dashboard] 成功获取 ${userData.length} 个用户分析数据`)
+      console.log('用户列表:', userData.map(u => u.username).join(', '))
     } catch (error: any) {
       console.error('加载MongoDB仪表板数据失败:', error)
       setError(error.message || '数据加载失败')
@@ -499,12 +503,17 @@ export function MongoDBDashboard() {
         <TabsContent value="users" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>用户详细分析</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                用户详细分析
+                <Badge variant="outline" className="ml-2">
+                  显示 {userAnalytics.length} 个用户
+                </Badge>
+              </CardTitle>
               <CardDescription>基于MongoDB聚合管道的用户行为深度分析</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {userAnalytics.slice(0, 10).map((user, index) => {
+                {userAnalytics.map((user, index) => {
                   // 动态计算总点击次数：所有工具点击次数的总和
                   const calculatedTotalClicks = user.toolUsageDetails.reduce((total, tool) => total + tool.clickCount, 0)
 
