@@ -64,6 +64,35 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
       setHasError(false)
       setIsFullscreen(true) // 每次打开工具时默认最大化
       setStartTime(Date.now()) // 记录开始时间
+      
+      // 监听iframe的beforeunload事件（即将导航到外部链接）
+      const handleBeforeUnload = async (event: MessageEvent) => {
+        if (event.data && event.data.type === 'navigation' && event.data.url) {
+          console.log('🔗 检测到iframe导航事件:', event.data.url)
+          
+          // 检查是否是外部链接
+          if (event.data.url.startsWith('http') && !event.data.url.includes('xuxikai886.github.io')) {
+            try {
+              const { apiCall, isTauriEnvironment } = await import('@/lib/tauri-api')
+              if (isTauriEnvironment()) {
+                await apiCall('open_url', { url: event.data.url })
+                console.log('✅ 已在外部浏览器打开:', event.data.url)
+              } else {
+                window.open(event.data.url, '_blank')
+              }
+            } catch (error) {
+              console.error('❌ 打开外部链接失败:', error)
+              window.open(event.data.url, '_blank')
+            }
+          }
+        }
+      }
+      
+      window.addEventListener('message', handleBeforeUnload)
+      
+      return () => {
+        window.removeEventListener('message', handleBeforeUnload)
+      }
     }
   }, [isOpen, tool])
 
@@ -131,6 +160,79 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
   const handleIframeLoad = () => {
     setIsLoading(false)
     setHasError(false)
+    
+    // 添加iframe右键菜单拦截，提供无地址栏的新窗口打开功能
+    const iframe = document.getElementById('webview-iframe') as HTMLIFrameElement
+    if (iframe) {
+      // 拦截iframe的右键菜单
+      iframe.addEventListener('contextmenu', async (event) => {
+        // 检查是否点击了链接
+        const selection = iframe.contentWindow?.getSelection?.()?.toString()
+        if (selection || event.ctrlKey) {
+          // 有选中文本或按住Ctrl键时，保持原有右键菜单
+          return
+        }
+        
+        event.preventDefault()
+        
+        // 创建自定义右键菜单
+        const contextMenu = document.createElement('div')
+        contextMenu.className = 'fixed z-[9999] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg py-1 min-w-[150px]'
+        contextMenu.style.left = `${event.clientX}px`
+        contextMenu.style.top = `${event.clientY}px`
+        
+        // 添加菜单项：在新窗口打开（无地址栏）
+        const openInNewWindow = document.createElement('div')
+        openInNewWindow.className = 'px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center'
+        openInNewWindow.innerHTML = `
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+          在新窗口打开（无地址栏）
+        `
+        
+        openInNewWindow.onclick = async () => {
+          try {
+            const { apiCall, isTauriEnvironment } = await import('@/lib/tauri-api')
+            if (isTauriEnvironment() && tool) {
+              // 使用Tauri创建新窗口，无装饰（隐藏地址栏）
+              await apiCall('create_kiosk_window', { 
+                url: tool.url,
+                title: tool.name
+              })
+              console.log('✅ 已在无地址栏窗口打开:', tool.url)
+            } else {
+              // Web环境备用方案
+              window.open(tool?.url, '_blank')
+            }
+          } catch (error) {
+            console.error('❌ 创建新窗口失败:', error)
+            // 备用方案：普通窗口打开
+            window.open(tool?.url, '_blank')
+          }
+          
+          // 移除菜单
+          document.body.removeChild(contextMenu)
+        }
+        
+        contextMenu.appendChild(openInNewWindow)
+        document.body.appendChild(contextMenu)
+        
+        // 点击其他地方时移除菜单
+        const removeMenu = () => {
+          if (document.body.contains(contextMenu)) {
+            document.body.removeChild(contextMenu)
+          }
+          document.removeEventListener('click', removeMenu)
+        }
+        
+        setTimeout(() => {
+          document.addEventListener('click', removeMenu)
+        }, 100)
+      })
+    }
+    
+    console.log('✅ iframe加载完成，已启用自定义右键菜单')
   }
 
   const handleIframeError = () => {
@@ -285,8 +387,6 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
             onLoad={handleIframeLoad}
             onError={handleIframeError}
             referrerPolicy="no-referrer-when-downgrade"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation"
-            allow="accelerometer; autoplay; camera; clipboard-read; clipboard-write; encrypted-media; fullscreen; geolocation; gyroscope; magnetometer; microphone; midi; payment; picture-in-picture; publickey-credentials-get; screen-wake-lock; web-share"
             allowFullScreen
             style={{
               border: 'none',

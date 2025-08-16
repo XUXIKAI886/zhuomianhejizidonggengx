@@ -29,10 +29,11 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' tauri: asset: http://localhost:3000 ipc: https://ipc.localhost; img-src 'self' asset: data: http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://restapi.amap.com; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost ws://localhost:3000 http://localhost:3000 https: https://restapi.amap.com tauri:; frame-src 'self' https: http: data:;",
+      "csp": "default-src 'self' tauri: asset: http://localhost:3000 ipc: https://ipc.localhost; img-src 'self' asset: data: http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://restapi.amap.com; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost ws://localhost:3000 http://localhost:3000 https: https://restapi.amap.com tauri:; frame-src 'self' https: http: data:; child-src 'self' https: http: data: blob:; object-src 'self' https: http: data:;",
       "capabilities": [
         "main-capability",
-        "http-capability"
+        "http-capability",
+        "iframe-capability"
       ]
     },
     "withGlobalTauri": true
