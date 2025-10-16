@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { Layers, TrendingUp, Palette, ShoppingCart, Users, MessageCircle, Star, Zap } from "lucide-react"
+import { Layers, TrendingUp, Palette, ShoppingCart, Users, MessageCircle, Star, Zap, Globe } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { WeatherWidget } from "@/components/weather-widget"
 import { getCategoryStats, getToolsByCategory } from "@/lib/tool-data"
@@ -55,6 +55,14 @@ const getCategoriesWithCounts = () => {
       count: getToolsByCategory("客服工具").length,
       color: "from-rose-300 to-rose-400",
       new: true
+    },
+    {
+      id: "website",
+      name: "公司官网",
+      icon: Globe,
+      count: getToolsByCategory("公司官网").length,
+      color: "from-indigo-300 to-indigo-400",
+      featured: true
     },
   ]
 }
@@ -123,6 +131,12 @@ export function Sidebar({ activeCategory, onCategoryChange }: SidebarProps) {
                           <Badge className="bg-emerald-400 hover:bg-emerald-400 text-white text-xs px-1.5 py-0.5 h-5">
                             <Star className="w-3 h-3 mr-1" />
                             新增
+                          </Badge>
+                        )}
+                        {category.featured && (
+                          <Badge className="bg-indigo-400 hover:bg-indigo-400 text-white text-xs px-1.5 py-0.5 h-5">
+                            <Star className="w-3 h-3 mr-1" />
+                            推荐
                           </Badge>
                         )}
                       </div>

@@ -42,10 +42,10 @@ export default function HomePage() {
                     </div>
                     <div className="hidden lg:block">
                       <div className="relative">
-                        <div className="w-32 h-32 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-white/20 dark:border-gray-600/20">
+                        <div className="w-32 h-32 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm rounded-2xl p-1 shadow-lg border border-white/20 dark:border-gray-600/20">
                           <img
-                            src="/welcome-image.png"
-                            alt="呈尚策划工具中心"
+                            src="/chengshang-logo.png"
+                            alt="呈尚策划"
                             className="w-full h-full object-contain rounded-xl"
                           />
                         </div>

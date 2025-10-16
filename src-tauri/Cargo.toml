@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "1.0.25"
+version = "1.0.26"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
@@ -28,6 +28,7 @@ tauri-plugin-updater = "2"
 tauri-plugin-http = "2"
 tauri-plugin-process = "2"
 tauri-plugin-app = { version = "2.0.0-alpha.2" }
+tauri-plugin-clipboard-manager = "2"
 
 # 认证系统依赖
 mongodb = "3.0"
@@ -41,3 +42,5 @@ jsonwebtoken = "9.3"
 rand = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
 tauri-plugin-store = "2"
+tauri-plugin-dialog = "2.4.0"
+tauri-plugin-fs = "2.4.0"

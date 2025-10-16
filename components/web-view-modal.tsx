@@ -388,6 +388,7 @@ export function WebViewModal({ isOpen, onClose, tool }: WebViewModalProps) {
             onError={handleIframeError}
             referrerPolicy="no-referrer-when-downgrade"
             allowFullScreen
+            allow="clipboard-read; clipboard-write; web-share; fullscreen; geolocation; microphone; camera"
             style={{
               border: 'none',
               width: '100%',

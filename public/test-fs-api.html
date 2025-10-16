@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试Tauri FS API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Tauri FS API 测试工具</h1>
+
+    <div class="test-section">
+        <h2>环境检测</h2>
+        <button onclick="checkEnvironment()">检测Tauri环境</button>
+        <pre id="env-result"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>测试1: 直接参数格式 (当前文档中的格式)</h2>
+        <button onclick="testWriteDirectParams()">测试写入</button>
+        <pre id="test1-result"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>测试2: Options包裹格式</h2>
+        <button onclick="testWriteWithOptions()">测试写入</button>
+        <pre id="test2-result"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>测试3: 使用Tauri API对象 (非invoke)</h2>
+        <button onclick="testWriteWithAPI()">测试写入</button>
+        <pre id="test3-result"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>完整下载流程测试</h2>
+        <button onclick="testFullDownload()">测试完整下载流程</button>
+        <pre id="full-test-result"></pre>
+    </div>
+
+    <script>
+        function checkEnvironment() {
+            const result = document.getElementById('env-result');
+            const checks = [];
+
+            checks.push('window.__TAURI__: ' + (typeof window.__TAURI__ !== 'undefined' ? '✅ 存在' : '❌ 不存在'));
+            checks.push('window.__TAURI__.core: ' + (typeof window.__TAURI__?.core !== 'undefined' ? '✅ 存在' : '❌ 不存在'));
+            checks.push('window.__TAURI__.core.invoke: ' + (typeof window.__TAURI__?.core?.invoke !== 'undefined' ? '✅ 存在' : '❌ 不存在'));
+            checks.push('window.__TAURI__.fs: ' + (typeof window.__TAURI__?.fs !== 'undefined' ? '✅ 存在' : '❌ 不存在'));
+
+            result.textContent = checks.join('\n');
+        }
+
+        // 测试1: 直接参数格式
+        async function testWriteDirectParams() {
+            const result = document.getElementById('test1-result');
+            result.textContent = '测试中...';
+
+            try {
+                console.log('🧪 [Test 1] 使用直接参数格式');
+
+                // 创建测试数据
+                const testData = [72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100]; // "Hello World"
+
+                // 方法1: 直接参数
+                await window.__TAURI__.core.invoke('plugin:fs|write_file', {
+                    path: 'E:\\Desktop\\test-direct.txt',
+                    contents: testData
+                });
+
+                result.innerHTML = '<span class="success">✅ 成功!</span>\n\n参数格式:\n' +
+                    JSON.stringify({
+                        path: 'E:\\Desktop\\test-direct.txt',
+                        contents: testData
+                    }, null, 2);
+
+            } catch (error) {
+                result.innerHTML = '<span class="error">❌ 失败!</span>\n\n' +
+                    '错误: ' + error.message;
+                console.error('Test 1 失败:', error);
+            }
+        }
+
+        // 测试2: Options包裹格式
+        async function testWriteWithOptions() {
+            const result = document.getElementById('test2-result');
+            result.textContent = '测试中...';
+
+            try {
+                console.log('🧪 [Test 2] 使用options包裹格式');
+
+                const testData = [72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100];
+
+                // 方法2: options包裹
+                await window.__TAURI__.core.invoke('plugin:fs|write_file', {
+                    options: {
+                        path: 'E:\\Desktop\\test-options.txt',
+                        contents: testData
+                    }
+                });
+
+                result.innerHTML = '<span class="success">✅ 成功!</span>\n\n参数格式:\n' +
+                    JSON.stringify({
+                        options: {
+                            path: 'E:\\Desktop\\test-options.txt',
+                            contents: testData
+                        }
+                    }, null, 2);
+
+            } catch (error) {
+                result.innerHTML = '<span class="error">❌ 失败!</span>\n\n' +
+                    '错误: ' + error.message;
+                console.error('Test 2 失败:', error);
+            }
+        }
+
+        // 测试3: 使用Tauri API对象
+        async function testWriteWithAPI() {
+            const result = document.getElementById('test3-result');
+            result.textContent = '测试中...';
+
+            try {
+                console.log('🧪 [Test 3] 使用Tauri fs API对象');
+
+                const testData = new Uint8Array([72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100]);
+
+                // 方法3: 使用fs API对象 (如果存在)
+                if (window.__TAURI__.fs && window.__TAURI__.fs.writeFile) {
+                    await window.__TAURI__.fs.writeFile('E:\\Desktop\\test-api.txt', testData);
+                    result.innerHTML = '<span class="success">✅ 成功!</span>\n\n使用: window.__TAURI__.fs.writeFile()';
+                } else {
+                    result.innerHTML = '<span class="error">⚠️ API不存在</span>\n\nwindow.__TAURI__.fs.writeFile 不可用';
+                }
+
+            } catch (error) {
+                result.innerHTML = '<span class="error">❌ 失败!</span>\n\n' +
+                    '错误: ' + error.message;
+                console.error('Test 3 失败:', error);
+            }
+        }
+
+        // 完整下载流程测试
+        async function testFullDownload() {
+            const result = document.getElementById('full-test-result');
+            result.textContent = '测试中...';
+
+            try {
+                console.log('🧪 [Full Test] 完整下载流程');
+
+                // 1. 创建测试图片 (小的Base64图片)
+                const canvas = document.createElement('canvas');
+                canvas.width = 100;
+                canvas.height = 100;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'red';
+                ctx.fillRect(0, 0, 100, 100);
+                ctx.fillStyle = 'white';
+                ctx.font = '20px Arial';
+                ctx.fillText('TEST', 20, 60);
+                const dataUrl = canvas.toDataURL('image/png');
+
+                console.log('📸 图片Data URL生成成功, 长度:', dataUrl.length);
+
+                // 2. 调用保存对话框
+                const filePath = await window.__TAURI__.core.invoke('plugin:dialog|save', {
+                    options: {
+                        defaultPath: 'test-image.png',
+                        title: '测试保存图片',
+                        filters: [{
+                            name: '图片文件',
+                            extensions: ['png']
+                        }]
+                    }
+                });
+
+                if (!filePath) {
+                    result.textContent = '⚠️ 用户取消了保存';
+                    return;
+                }
+
+                console.log('📁 选择的路径:', filePath);
+
+                // 3. 转换Base64为字节数组
+                const base64Data = dataUrl.split(',')[1];
+                const binaryData = atob(base64Data);
+                const bytes = new Uint8Array(binaryData.length);
+                for (let i = 0; i < binaryData.length; i++) {
+                    bytes[i] = binaryData.charCodeAt(i);
+                }
+
+                console.log('💾 字节数组准备完成, 大小:', bytes.length, 'bytes');
+
+                // 4. 尝试不同的写入方法
+                let writeSuccess = false;
+                let successMethod = '';
+
+                // 尝试方法1: 直接参数
+                try {
+                    console.log('📝 尝试方法1: 直接参数');
+                    await window.__TAURI__.core.invoke('plugin:fs|write_file', {
+                        path: filePath,
+                        contents: Array.from(bytes)
+                    });
+                    writeSuccess = true;
+                    successMethod = '方法1: 直接参数格式';
+                } catch (e1) {
+                    console.log('❌ 方法1失败:', e1.message);
+
+                    // 尝试方法2: options包裹
+                    try {
+                        console.log('📝 尝试方法2: options包裹');
+                        await window.__TAURI__.core.invoke('plugin:fs|write_file', {
+                            options: {
+                                path: filePath,
+                                contents: Array.from(bytes)
+                            }
+                        });
+                        writeSuccess = true;
+                        successMethod = '方法2: options包裹格式';
+                    } catch (e2) {
+                        console.log('❌ 方法2失败:', e2.message);
+                        throw new Error('所有写入方法都失败:\n方法1: ' + e1.message + '\n方法2: ' + e2.message);
+                    }
+                }
+
+                if (writeSuccess) {
+                    result.innerHTML = '<span class="success">✅ 完整下载流程成功!</span>\n\n' +
+                        '成功方法: ' + successMethod + '\n' +
+                        '保存路径: ' + filePath + '\n' +
+                        '文件大小: ' + bytes.length + ' bytes';
+                }
+
+            } catch (error) {
+                result.innerHTML = '<span class="error">❌ 完整流程失败!</span>\n\n' +
+                    '错误: ' + error.message;
+                console.error('Full test 失败:', error);
+            }
+        }
+
+        // 页面加载时自动检测环境
+        window.addEventListener('DOMContentLoaded', () => {
+            checkEnvironment();
+        });
+    </script>
+</body>
+</html>

@@ -9,34 +9,35 @@ export const isTauriEnvironment = () => {
   
   // 检查协议 - Tauri 2.x支持多种协议
   const isTauriProtocol = windowAny.location?.protocol === 'tauri:'
-  const isHttpsProtocol = windowAny.location?.protocol === 'https:' && 
+  const isHttpsProtocol = windowAny.location?.protocol === 'https:' &&
                          windowAny.location?.hostname === 'tauri.localhost'
-  const isHttpProtocol = windowAny.location?.protocol === 'http:' && 
+  const isHttpProtocol = windowAny.location?.protocol === 'http:' &&
                         windowAny.location?.hostname === 'tauri.localhost'
-  
+
   // 检查Tauri 2.x全局对象
   const hasTauriGlobal = !!(
     windowAny.__TAURI__ ||
     windowAny.__TAURI_IPC__ ||
     windowAny.isTauri
   )
-  
+
   // 检查UserAgent中的Tauri标识
   const hasTauriUserAgent = !!(
-    windowAny.navigator && 
-    windowAny.navigator.userAgent && 
+    windowAny.navigator &&
+    windowAny.navigator.userAgent &&
     windowAny.navigator.userAgent.includes('Tauri')
   )
-  
+
   // 检查是否有Tauri 2.x的invoke函数
   const hasInvokeFunction = !!(
     windowAny.__TAURI__?.core?.invoke ||
     windowAny.__TAURI__?.invoke ||
     windowAny.invoke
   )
-  
-  // Tauri 2.x判断逻辑
-  const isTauri = hasTauriGlobal || isTauriProtocol || isHttpsProtocol || isHttpProtocol
+
+  // Tauri 2.x判断逻辑：优先检查全局对象和invoke函数
+  // 在开发模式下，Tauri运行在localhost:3000，协议是http:
+  const isTauri = hasTauriGlobal || hasInvokeFunction || isTauriProtocol || isHttpsProtocol || isHttpProtocol
   
   // 调试日志
   console.log('🔍 Tauri 2.x环境检测:', {
@@ -174,10 +175,11 @@ export const safeInvoke = async (command: string, args?: any): Promise<any> => {
 // 专注于Tauri API - 已移除Next.js和临时会话管理
 
 // 模拟数据 - 与真实数据库结构保持一致
+// 注意：使用有效的MongoDB ObjectId格式（24位十六进制字符串）
 export const mockData = {
   users: [
     {
-      id: 'mock-admin-id',
+      id: '507f1f77bcf86cd799439011', // 有效的MongoDB ObjectId (admin)
       username: 'admin',
       role: 'admin',
       isActive: true,
@@ -185,43 +187,33 @@ export const mockData = {
       lastLoginAt: '2025-08-08T08:15:42.123Z',
       totalUsageTime: 7200,
       loginCount: 25
-    },
-    {
-      id: 'mock-user-id',
-      username: 'testuser',
-      role: 'user',
-      isActive: true,
-      createdAt: '2025-08-02T10:20:15.789Z',
-      lastLoginAt: '2025-08-07T14:30:20.456Z',
-      totalUsageTime: 3600,
-      loginCount: 12
     }
   ],
   systemStats: {
-    totalUsers: 2,
-    activeUsersToday: 2,
-    totalSessions: 37, // 这是关键数据 - 与管理后台保持一致
+    totalUsers: 1,
+    activeUsersToday: 1,
+    totalSessions: 25, // 这是关键数据 - 与管理后台保持一致
     mostPopularTools: [
       {
         toolId: 1,
         toolName: '商家回复解答手册',
         totalClicks: 150,
         totalUsageTime: 7200,
-        uniqueUsers: 2
+        uniqueUsers: 1
       },
       {
         toolId: 6,
         toolName: '域锦科技AI系统',
         totalClicks: 120,
         totalUsageTime: 5400,
-        uniqueUsers: 2
+        uniqueUsers: 1
       }
     ]
   },
   systemAnalytics: {
-    totalUsers: 2,
-    activeUsersToday: 2,
-    totalSessions: 37, // 与systemStats保持一致
+    totalUsers: 1,
+    activeUsersToday: 1,
+    totalSessions: 25, // 与systemStats保持一致
     averageSessionDuration: 1800,
     mostPopularTools: [
       {
@@ -229,22 +221,22 @@ export const mockData = {
         toolName: '商家回复解答手册',
         totalClicks: 150,
         totalUsageTime: 7200,
-        uniqueUsers: 2
+        uniqueUsers: 1
       },
       {
         toolId: 6,
         toolName: '域锦科技AI系统',
         totalClicks: 120,
         totalUsageTime: 5400,
-        uniqueUsers: 2
+        uniqueUsers: 1
       }
     ],
     userGrowthTrend: [
       {
         date: '2025-08-08',
         newUsers: 0,
-        activeUsers: 2,
-        totalSessions: 37
+        activeUsers: 1,
+        totalSessions: 25
       }
     ],
     toolUsageTrend: [
@@ -252,7 +244,7 @@ export const mockData = {
         date: '2025-08-08',
         totalClicks: 270,
         totalUsageTime: 12600,
-        uniqueUsers: 2
+        uniqueUsers: 1
       }
     ]
   }
@@ -265,8 +257,7 @@ const mockLogin = async (username: string, password: string) => {
 
   // 验证预设账号
   const validCredentials = [
-    { username: 'admin', password: 'admin@2025csch' },
-    { username: 'testuser', password: 'test123456' }
+    { username: 'admin', password: 'admin@2025csch' }
   ]
 
   const isValid = validCredentials.some(cred =>
@@ -442,8 +433,13 @@ export const apiCall = async (command: string, args?: any): Promise<any> => {
 
     case 'create_user':
       // 模拟创建用户
+      // 生成有效的MongoDB ObjectId格式（24位十六进制字符串）
+      const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0')
+      const randomBytes = Math.random().toString(16).substring(2, 18).padEnd(16, '0')
+      const mockObjectId = timestamp + randomBytes
+
       const newUser = {
-        id: `mock-${Date.now()}`,
+        id: mockObjectId, // 有效的MongoDB ObjectId格式
         username: args.username,
         role: args.role,
         isActive: true,
@@ -470,6 +466,32 @@ export const apiCall = async (command: string, args?: any): Promise<any> => {
     case 'reset_user_password':
       // 模拟重置密码
       return { success: true }
+
+    case 'track_user_activity':
+      // 模拟记录用户活动
+      console.log(`📊 Mock tracking user activity:`, {
+        userId: args.userId,
+        activityType: args.activityType,
+        toolId: args.toolId,
+        toolName: args.toolName,
+        duration: args.duration
+      })
+      return { success: true }
+
+    case 'logout':
+      // 模拟用户登出
+      console.log(`👋 Mock user logout:`, args.userId)
+      return { success: true }
+
+    case 'check_session':
+      // 模拟会话检查 - 返回null表示无会话
+      console.log(`🔍 Mock session check - no active session`)
+      throw new Error('No active session')
+
+    case 'verify_token_and_login':
+      // 模拟Token验证 - 始终失败，强制用户重新登录
+      console.log(`🔑 Mock token verification - token invalid`)
+      throw new Error('Invalid token')
 
     default:
       throw new Error(`未知的API命令: ${command}`)

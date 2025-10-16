@@ -15,6 +15,12 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useAuth } from '@/lib/auth/auth-context'
 
+// LocalStorage键名
+const SAVED_USERNAME_KEY = 'chengshang_saved_username'
+const SAVED_PASSWORD_KEY = 'chengshang_saved_password'
+const REMEMBER_ME_KEY = 'chengshang_remember_me'
+const AUTO_LOGIN_KEY = 'chengshang_auto_login'
+
 // 表单验证Schema
 const loginSchema = z.object({
   username: z.string().min(1, '请输入用户名').min(3, '用户名至少3个字符'),
@@ -24,6 +30,21 @@ const loginSchema = z.object({
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
+
+// 从localStorage获取保存的值
+const getSavedValue = (key: string): string => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(key) || ''
+  }
+  return ''
+}
+
+const getSavedBoolean = (key: string): boolean => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(key) === 'true'
+  }
+  return false
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -39,14 +60,14 @@ export default function LoginPage() {
     return () => clearTimeout(timer)
   }, [])
 
-  // 表单配置
+  // 表单配置 - 从localStorage恢复保存的值
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
-      password: '',
-      rememberMe: false,
-      autoLogin: false,
+      username: getSavedValue(SAVED_USERNAME_KEY),
+      password: getSavedValue(SAVED_PASSWORD_KEY),
+      rememberMe: getSavedBoolean(REMEMBER_ME_KEY),
+      autoLogin: getSavedBoolean(AUTO_LOGIN_KEY),
     },
   })
 
@@ -70,6 +91,27 @@ export default function LoginPage() {
 
   // 登录提交处理
   const onSubmit = async (values: LoginFormValues) => {
+    // 保存用户名、密码和勾选状态到localStorage
+    if (typeof window !== 'undefined') {
+      if (values.rememberMe) {
+        localStorage.setItem(SAVED_USERNAME_KEY, values.username)
+        localStorage.setItem(SAVED_PASSWORD_KEY, values.password)
+        localStorage.setItem(REMEMBER_ME_KEY, 'true')
+      } else {
+        // 如果取消勾选"记住我"，清除保存的用户名和密码
+        localStorage.removeItem(SAVED_USERNAME_KEY)
+        localStorage.removeItem(SAVED_PASSWORD_KEY)
+        localStorage.removeItem(REMEMBER_ME_KEY)
+      }
+
+      // 保存自动登录状态
+      if (values.autoLogin) {
+        localStorage.setItem(AUTO_LOGIN_KEY, 'true')
+      } else {
+        localStorage.removeItem(AUTO_LOGIN_KEY)
+      }
+    }
+
     const success = await login(
       values.username,
       values.password,

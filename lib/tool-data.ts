@@ -20,6 +20,15 @@ import {
   Search,
   Scissors,
   Upload,
+  Users,
+  BarChart,
+  FolderGit2,
+  Globe,
+  Megaphone,
+  ClipboardCheck,
+  DollarSign,
+  Image,
+  FileType,
 } from "lucide-react"
 import { Tool } from "@/types/tools"
 
@@ -41,7 +50,7 @@ export const toolsData: Tool[] = [
   },
   {
     id: 2,
-    name: "美团运营知识学习系统",
+    name: "外卖运营知识学习系统",
     description: "系统化的运营知识学习和考试平台",
     category: "运营工具",
     url: "https://xuxikai886.github.io/kaoshixitong/index.html",
@@ -71,7 +80,7 @@ export const toolsData: Tool[] = [
   },
   {
     id: 4,
-    name: "美团外卖运营知识SVG图表集合",
+    name: "外卖运营知识SVG图表集合",
     description: "运营知识的可视化图表展示",
     category: "运营工具",
     url: "https://xuxikai886.github.io/meituan-svg-guide-new/",
@@ -86,7 +95,7 @@ export const toolsData: Tool[] = [
   },
   {
     id: 5,
-    name: "美团店铺运营数据可视化动画演示系统",
+    name: "外卖店铺运营数据可视化动画演示系统",
     description: "动态展示店铺运营数据和趋势分析",
     category: "运营工具",
     url: "https://xuxikai886.github.io/meituanshujuyanshi/",
@@ -174,10 +183,25 @@ export const toolsData: Tool[] = [
     lastUpdated: "1天前",
     toolType: "web"
   },
-  // 美工工具
   {
     id: 11,
-    name: "美团闪购产品信息图片采集软件",
+    name: "店铺数据可视化图表",
+    description: "美团外卖数据可视化分析系统，上传Excel营业数据即可生成专业图表",
+    category: "运营工具",
+    url: "https://xuxikai886.github.io/dianpushujukeshihua/",
+    icon: BarChart,
+    rating: 4.8,
+    downloads: "1.8k",
+    tags: ["数据可视化", "Excel分析", "营业数据", "图表生成"],
+    color: "from-blue-300 to-blue-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  // 美工工具
+  {
+    id: 12,
+    name: "外卖闪购产品信息图片采集软件",
     description: "自动采集产品信息和图片资源",
     category: "美工工具",
     url: "https://xuxikai886.github.io/shangou-caiji/",
@@ -191,8 +215,8 @@ export const toolsData: Tool[] = [
     toolType: "web"
   },
   {
-    id: 12,
-    name: "美团店铺数据处理工具",
+    id: 13,
+    name: "外卖店铺数据处理工具",
     description: "店铺图片和产品数据的批量处理",
     category: "美工工具",
     url: "https://xuxikai886.github.io/meituanshangpingtupianxiazai/",
@@ -205,9 +229,39 @@ export const toolsData: Tool[] = [
     lastUpdated: "3天前",
     toolType: "web"
   },
+  {
+    id: 33,
+    name: "外卖图片系统",
+    description: "外卖头像、店招、海报图片提取和处理工具，快速获取店铺视觉素材",
+    category: "美工工具",
+    url: "https://xuxikai886.github.io/touxiangdianzhaohaibaotiqu/",
+    icon: Image,
+    rating: 4.7,
+    downloads: "0.8k",
+    tags: ["图片提取", "头像", "店招", "海报"],
+    color: "from-purple-300 to-purple-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  {
+    id: 35,
+    name: "美工设计系统",
+    description: "专业的美工设计平台，提供设计工具和素材资源，助力设计师高效创作",
+    category: "美工工具",
+    url: "https://www.yujinkeji.xyz",
+    icon: Edit,
+    rating: 4.9,
+    downloads: "1.2k",
+    tags: ["设计工具", "素材资源", "创作平台", "专业设计"],
+    color: "from-purple-300 to-purple-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
   // 销售工具
   {
-    id: 13,
+    id: 14,
     name: "呈尚策划销售部数据统计系统",
     description: "销售数据实时统计和分析",
     category: "销售工具",
@@ -222,7 +276,7 @@ export const toolsData: Tool[] = [
     toolType: "web"
   },
   {
-    id: 14,
+    id: 15,
     name: "销售数据报告生成系统",
     description: "20秒快速生成专业销售报告",
     category: "销售工具",
@@ -238,7 +292,7 @@ export const toolsData: Tool[] = [
   },
   // 人事工具
   {
-    id: 15,
+    id: 16,
     name: "呈尚策划财务记账系统",
     description: "企业财务收支记录和统计",
     category: "人事工具",
@@ -253,7 +307,7 @@ export const toolsData: Tool[] = [
     toolType: "web"
   },
   {
-    id: 16,
+    id: 17,
     name: "运营部智能排班系统+销售部大扫除安排表系统",
     description: "智能排班和任务分配系统",
     category: "人事工具",
@@ -268,7 +322,7 @@ export const toolsData: Tool[] = [
     toolType: "web"
   },
   {
-    id: 17,
+    id: 18,
     name: "呈尚策划人事面试顾问系统",
     description: "简历分析和面试指南生成",
     category: "人事工具",
@@ -283,7 +337,7 @@ export const toolsData: Tool[] = [
     toolType: "web"
   },
   {
-    id: 18,
+    id: 19,
     name: "呈尚策划数据统计系统",
     description: "企业综合数据统计和分析",
     category: "人事工具",
@@ -297,11 +351,41 @@ export const toolsData: Tool[] = [
     lastUpdated: "3天前",
     toolType: "web"
   },
+  {
+    id: 20,
+    name: "呈尚策划人事管理系统",
+    description: "集成招聘记录管理和员工贡献评估的综合人事管理平台",
+    category: "人事工具",
+    url: "https://www.csch.site/",
+    icon: Users,
+    rating: 4.9,
+    downloads: "1.5k",
+    tags: ["招聘记录管理", "员工贡献评估", "人事管理", "综合平台"],
+    color: "from-amber-300 to-amber-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  {
+    id: 21,
+    name: "呈尚策划项目集合",
+    description: "呈尚策划所有新项目的统一管理平台，集成未来所有新开发的工具和系统",
+    category: "人事工具",
+    url: "https://xuxikai886.github.io/cschxiangmujihe",
+    icon: FolderGit2,
+    rating: 5.0,
+    downloads: "2.1k",
+    tags: ["项目集合", "GitHub", "新项目整合", "统一管理"],
+    color: "from-amber-300 to-amber-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
   // 客服工具
   {
-    id: 19,
-    name: "美团店铺信息采集系统",
-    description: "批量采集美团店铺基础信息",
+    id: 22,
+    name: "外卖店铺信息采集系统",
+    description: "批量采集外卖店铺基础信息",
     category: "客服工具",
     url: "https://xuxikai886.github.io/meituandianpuxinxicaiji/",
     icon: Search,
@@ -313,9 +397,9 @@ export const toolsData: Tool[] = [
     lastUpdated: "1天前",
     toolType: "web"
   },
-  // 新增第20个工具
+  // 新增第23个工具
   {
-    id: 20,
+    id: 23,
     name: "外卖数周报系统（升级版）",
     description: "输入店铺数据，自动生成专业的运营分析报告",
     category: "运营工具",
@@ -329,9 +413,9 @@ export const toolsData: Tool[] = [
     lastUpdated: "今天",
     toolType: "external"  // 改为external类型，在外部浏览器打开
   },
-  // 新增第21个工具
+  // 新增第24个工具
   {
-    id: 21,
+    id: 24,
     name: "图片墙图片分割工具",
     description: "上传图片墙图片，自动分割为三个相等部分，支持多种格式下载",
     category: "运营工具",
@@ -345,9 +429,9 @@ export const toolsData: Tool[] = [
     lastUpdated: "今天",
     toolType: "web"
   },
-  // 新增第22个工具
+  // 新增第25个工具
   {
-    id: 22,
+    id: 25,
     name: "关键词描述文件上传下载中心",
     description: "专业的文件上传下载管理平台，支持关键词标记和描述管理",
     category: "运营工具",
@@ -357,6 +441,127 @@ export const toolsData: Tool[] = [
     downloads: "1.2k",
     tags: ["文件上传", "关键词管理", "文件分享", "云存储"],
     color: "from-blue-300 to-blue-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  // 公司官网
+  {
+    id: 26,
+    name: "呈尚策划官方网站",
+    description: "呈尚策划公司官方网站，了解公司服务、团队介绍、成功案例等信息",
+    category: "公司官网",
+    url: "https://www.csch.top",
+    icon: Globe,
+    rating: 5.0,
+    downloads: "5.0k",
+    tags: ["公司介绍", "服务项目", "成功案例", "联系我们"],
+    color: "from-indigo-400 to-indigo-600",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  {
+    id: 27,
+    name: "美团活动推广手册",
+    description: "美团外卖平台各类活动推广策略和实战案例，帮助商家提升营销效果",
+    category: "运营工具",
+    url: "https://xuxikai886.github.io/waimaihuodongtuiguang/",
+    icon: Megaphone,
+    rating: 4.9,
+    downloads: "3.2k",
+    tags: ["美团活动", "推广策略", "营销案例", "活动运营"],
+    color: "from-blue-300 to-blue-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  {
+    id: 28,
+    name: "饿了么活动推广知识手册",
+    description: "饿了么外卖平台活动推广策略和运营知识，助力商家营销增长",
+    category: "运营工具",
+    url: "https://xuxikai886.github.io/elemehuodongtuiguang/",
+    icon: Megaphone,
+    rating: 4.9,
+    downloads: "2.8k",
+    tags: ["饿了么活动", "推广知识", "营销策略", "活动运营"],
+    color: "from-blue-300 to-blue-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  {
+    id: 29,
+    name: "美团活动推广话术集",
+    description: "美团外卖活动推广专业话术模板，帮助商家提升沟通效率和转化率",
+    category: "运营工具",
+    url: "https://xuxikai886.github.io/meituanhuodongtuiguanghuashu/",
+    icon: Megaphone,
+    rating: 4.8,
+    downloads: "2.5k",
+    tags: ["美团话术", "推广话术", "沟通技巧", "转化率"],
+    color: "from-blue-300 to-blue-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  {
+    id: 30,
+    name: "饿了么活动推广话术集",
+    description: "饿了么外卖活动推广专业话术模板，帮助商家提升沟通效率和转化率",
+    category: "运营工具",
+    url: "https://xuxikai886.github.io/elemehuodongtuiguanghuashu/",
+    icon: Megaphone,
+    rating: 4.8,
+    downloads: "2.3k",
+    tags: ["饿了么话术", "推广话术", "沟通技巧", "转化率"],
+    color: "from-blue-300 to-blue-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  {
+    id: 31,
+    name: "每日巡店系统",
+    description: "运营人员每日巡店记录和管理系统，智能记录店铺巡查情况，提升运营效率",
+    category: "运营工具",
+    url: "https://xuxikai886.github.io/meirixundianxitong/",
+    icon: ClipboardCheck,
+    rating: 4.9,
+    downloads: "1.5k",
+    tags: ["巡店管理", "运营记录", "店铺巡查", "效率提升"],
+    color: "from-blue-300 to-blue-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  {
+    id: 34,
+    name: "美团饿了么关键词描述生成",
+    description: "智能生成美团和饿了么店铺商品关键词和描述文案，提升商品搜索排名",
+    category: "运营工具",
+    url: "https://xuxikai886.github.io/guanjiancimiaoshuxitong/",
+    icon: FileType,
+    rating: 4.8,
+    downloads: "1.5k",
+    tags: ["关键词生成", "描述文案", "SEO优化", "商品标题"],
+    color: "from-blue-300 to-blue-400",
+    featured: true,
+    lastUpdated: "今天",
+    toolType: "web"
+  },
+  {
+    id: 32,
+    name: "双平台回款数据统计",
+    description: "美团和饿了么双平台回款数据统计和分析系统，帮助财务人员高效管理回款记录",
+    category: "人事工具",
+    url: "https://xuxikai886.github.io/shuangpingtaihuikuanshujutongji/",
+    icon: DollarSign,
+    rating: 4.8,
+    downloads: "0.5k",
+    tags: ["回款统计", "双平台", "财务管理", "数据分析"],
+    color: "from-amber-300 to-amber-400",
     featured: true,
     lastUpdated: "今天",
     toolType: "web"

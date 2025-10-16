@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登录测试工具</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 3px; white-space: pre-wrap; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; width: 200px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 登录问题诊断工具</h1>
+        
+        <div class="test-section">
+            <h3>1. 查询数据库用户</h3>
+            <button onclick="queryUsers()">查询所有用户</button>
+            <div id="usersResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2. 测试登录</h3>
+            <div>
+                <input type="text" id="username" placeholder="用户名" value="王郡江">
+                <input type="password" id="password" placeholder="密码" value="ytK1j0zWkf$L">
+                <button onclick="testLogin()">测试登录</button>
+            </div>
+            <div id="loginResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3. 密码哈希测试</h3>
+            <div>
+                <input type="text" id="testPassword" placeholder="测试密码" value="ytK1j0zWkf$L">
+                <button onclick="testPasswordHash()">计算哈希</button>
+            </div>
+            <div id="hashResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>4. 快速测试三个用户</h3>
+            <button onclick="testAllUsers()">测试所有新用户登录</button>
+            <div id="allUsersResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 检查是否在Tauri环境中
+        const isTauri = window.__TAURI__ && window.__TAURI__.core;
+        
+        if (!isTauri) {
+            document.body.innerHTML = '<div style="text-align: center; margin-top: 100px;"><h2>⚠️ 请在Tauri应用中打开此页面</h2><p>此工具需要在桌面应用环境中运行</p></div>';
+        }
+
+        // 查询所有用户
+        async function queryUsers() {
+            const resultDiv = document.getElementById('usersResult');
+            resultDiv.textContent = '正在查询用户数据...';
+            
+            try {
+                const result = await window.__TAURI__.core.invoke('debug_user_data');
+                resultDiv.className = 'result success';
+                resultDiv.textContent = result;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `查询失败: ${error}`;
+            }
+        }
+
+        // 测试登录
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            if (!username || !password) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '请输入用户名和密码';
+                return;
+            }
+            
+            resultDiv.textContent = '正在测试登录...';
+            
+            try {
+                const result = await window.__TAURI__.core.invoke('login', {
+                    username: username,
+                    password: password,
+                    rememberMe: false,
+                    autoLogin: false
+                });
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `登录成功！\n用户: ${result.username}\n角色: ${result.role}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `登录失败: ${error}`;
+            }
+        }
+
+        // 测试密码哈希
+        function testPasswordHash() {
+            const password = document.getElementById('testPassword').value;
+            const resultDiv = document.getElementById('hashResult');
+            
+            if (!password) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '请输入密码';
+                return;
+            }
+            
+            // 计算密码哈希（与系统一致）
+            const salt = 'chengshang2025';
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password + salt);
+            
+            crypto.subtle.digest('SHA-256', data).then(hashBuffer => {
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `密码: ${password}\n哈希: ${hashHex}`;
+            }).catch(error => {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `哈希计算失败: ${error}`;
+            });
+        }
+
+        // 测试所有新用户
+        async function testAllUsers() {
+            const users = [
+                { username: '王郡江', password: 'ytK1j0zWkf$L' },
+                { username: '张玉莲', password: 'FYxEhJPz38*y' },
+                { username: '杨有淇', password: 'Ks8I3Y*vU7fX' }
+            ];
+            
+            const resultDiv = document.getElementById('allUsersResult');
+            resultDiv.textContent = '正在测试所有用户登录...\n';
+            
+            for (const user of users) {
+                try {
+                    const result = await window.__TAURI__.core.invoke('login', {
+                        username: user.username,
+                        password: user.password,
+                        rememberMe: false,
+                        autoLogin: false
+                    });
+                    
+                    resultDiv.textContent += `✅ ${user.username}: 登录成功\n`;
+                } catch (error) {
+                    resultDiv.textContent += `❌ ${user.username}: ${error}\n`;
+                }
+            }
+            
+            resultDiv.className = 'result';
+        }
+
+        // 页面加载时自动查询用户
+        if (isTauri) {
+            setTimeout(queryUsers, 1000);
+        }
+    </script>
+</body>
+</html>

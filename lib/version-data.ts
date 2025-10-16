@@ -446,7 +446,7 @@ export const versionHistory: VersionUpdate[] = [
     title: "工具生态系统扩展",
     description: "大幅扩展工具生态系统，新增多个实用工具，完善分类管理。",
     features: [
-      { icon: "sparkles", text: "新增美团数据处理工具套件" },
+      { icon: "sparkles", text: "新增外卖数据处理工具套件" },
       { icon: "sparkles", text: "新增财务记账管理系统" },
       { icon: "users", text: "新增人事面试顾问系统" },
       { icon: "settings", text: "完善工具分类和标签系统" },

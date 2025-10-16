@@ -241,7 +241,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 清除本地存储的Token
       clearAllTokens()
-      console.log('✅ 本地Token已清除')
+
+      // 清除保存的密码（但保留用户名和勾选状态）
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('chengshang_saved_password')
+      }
+
+      console.log('✅ 本地Token和密码已清除')
 
       dispatch({ type: 'LOGOUT' })
       toast.success('已安全退出登录')
@@ -249,6 +255,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('登出失败:', error)
       // 即使后端登出失败，也要清除前端状态和Token
       clearAllTokens()
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('chengshang_saved_password')
+      }
       dispatch({ type: 'LOGOUT' })
       toast.error('登出时发生错误，但已清除本地会话')
     }

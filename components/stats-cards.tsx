@@ -103,7 +103,7 @@ export function StatsCards() {
     },
     {
       title: "总使用量",
-      value: totalUsage >= 1000 ? `${Math.round(totalUsage / 1000)}k` : totalUsage.toString(),
+      value: totalUsage.toLocaleString('zh-CN'),
       change: growthRate,
       changeType: growthChangeType,
       icon: TrendingUp,

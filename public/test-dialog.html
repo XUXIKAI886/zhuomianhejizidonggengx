@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tauri文件对话框测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            background: #f7f9fc;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .result-content {
+            color: #333;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .warning-title {
+            color: #856404;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .warning-text {
+            color: #856404;
+            font-size: 14px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗂️ Tauri文件对话框测试</h1>
+        <p class="subtitle">测试Tauri Dialog插件的文件选择功能</p>
+
+        <div id="status"></div>
+
+        <div class="button-group">
+            <button onclick="selectSingleFile()">📄 选择单个文件</button>
+            <button onclick="selectMultipleFiles()">📑 选择多个文件</button>
+            <button onclick="selectDirectory()">📁 选择文件夹</button>
+            <button onclick="selectImageFile()">🖼️ 选择图片（带过滤器）</button>
+            <button onclick="saveFileDialog()">💾 保存文件对话框</button>
+        </div>
+
+        <div class="result">
+            <div class="result-title">结果输出</div>
+            <div class="result-content" id="output">等待操作...</div>
+        </div>
+    </div>
+
+    <script>
+        // 输出日志
+        function logOutput(message) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            output.textContent = `[${timestamp}] ${message}`;
+        }
+
+        // 检查Tauri环境
+        function checkTauriEnv() {
+            const statusDiv = document.getElementById('status');
+
+            if (window.__TAURI__) {
+                statusDiv.innerHTML = '<span class="status success">✓ Tauri环境已检测</span>';
+                logOutput('Tauri环境已就绪\nwindow.__TAURI__ 可用');
+
+                // 打印可用的API
+                console.log('Tauri APIs:', Object.keys(window.__TAURI__));
+                return true;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="warning">
+                        <div class="warning-title">⚠️ 非Tauri环境</div>
+                        <div class="warning-text">
+                            当前在普通浏览器中运行。请在Tauri桌面应用中打开此页面。
+                        </div>
+                    </div>
+                `;
+                logOutput('请在Tauri桌面应用中运行此页面');
+                return false;
+            }
+        }
+
+        // 选择单个文件
+        async function selectSingleFile() {
+            if (!checkTauriEnv()) return;
+
+            try {
+                logOutput('正在调用Tauri命令打开文件选择对话框...');
+
+                // 使用Tauri的invoke命令调用Rust后端
+                const result = await window.__TAURI__.core.invoke('plugin:dialog|open', {
+                    options: {
+                        multiple: false,
+                        directory: false,
+                        title: '选择一个文件'
+                    }
+                });
+
+                if (result) {
+                    logOutput(`✓ 选中的文件:\n${result}`);
+                } else {
+                    logOutput('用户取消了选择');
+                }
+            } catch (error) {
+                logOutput(`错误: ${error.message}\n\n详细信息: ${JSON.stringify(error, null, 2)}`);
+                console.error('Dialog error:', error);
+            }
+        }
+
+        // 选择多个文件
+        async function selectMultipleFiles() {
+            if (!checkTauriEnv()) return;
+
+            try {
+                logOutput('正在打开多文件选择对话框...');
+
+                const result = await window.__TAURI__.core.invoke('plugin:dialog|open', {
+                    options: {
+                        multiple: true,
+                        directory: false,
+                        title: '选择多个文件'
+                    }
+                });
+
+                if (result && result.length > 0) {
+                    logOutput(`✓ 选中 ${result.length} 个文件:\n${result.join('\n')}`);
+                } else {
+                    logOutput('用户取消了选择');
+                }
+            } catch (error) {
+                logOutput(`错误: ${error.message}`);
+                console.error('Dialog error:', error);
+            }
+        }
+
+        // 选择文件夹
+        async function selectDirectory() {
+            if (!checkTauriEnv()) return;
+
+            try {
+                logOutput('正在打开文件夹选择对话框...');
+
+                const result = await window.__TAURI__.core.invoke('plugin:dialog|open', {
+                    options: {
+                        directory: true,
+                        multiple: false,
+                        title: '选择一个文件夹'
+                    }
+                });
+
+                if (result) {
+                    logOutput(`✓ 选中的文件夹:\n${result}`);
+                } else {
+                    logOutput('用户取消了选择');
+                }
+            } catch (error) {
+                logOutput(`错误: ${error.message}`);
+                console.error('Dialog error:', error);
+            }
+        }
+
+        // 选择图片文件（带过滤器）
+        async function selectImageFile() {
+            if (!checkTauriEnv()) return;
+
+            try {
+                logOutput('正在打开图片文件选择对话框（仅显示图片）...');
+
+                const result = await window.__TAURI__.core.invoke('plugin:dialog|open', {
+                    options: {
+                        multiple: false,
+                        directory: false,
+                        filters: [{
+                            name: 'Images',
+                            extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg']
+                        }],
+                        title: '选择图片文件'
+                    }
+                });
+
+                if (result) {
+                    logOutput(`✓ 选中的图片:\n${result}`);
+                } else {
+                    logOutput('用户取消了选择');
+                }
+            } catch (error) {
+                logOutput(`错误: ${error.message}`);
+                console.error('Dialog error:', error);
+            }
+        }
+
+        // 保存文件对话框
+        async function saveFileDialog() {
+            if (!checkTauriEnv()) return;
+
+            try {
+                logOutput('正在打开保存文件对话框...');
+
+                const result = await window.__TAURI__.core.invoke('plugin:dialog|save', {
+                    options: {
+                        defaultPath: 'output.txt',
+                        filters: [{
+                            name: 'Text Files',
+                            extensions: ['txt', 'md']
+                        }],
+                        title: '保存文件'
+                    }
+                });
+
+                if (result) {
+                    logOutput(`✓ 保存路径:\n${result}\n\n注意: 这只是获取路径，实际保存需要配合fs插件`);
+                } else {
+                    logOutput('用户取消了保存');
+                }
+            } catch (error) {
+                logOutput(`错误: ${error.message}`);
+                console.error('Dialog error:', error);
+            }
+        }
+
+        // 页面加载时检查环境
+        window.addEventListener('DOMContentLoaded', () => {
+            checkTauriEnv();
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "csch",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "identifier": "com.chengshangcehua.tools",
   "build": {
     "frontendDist": "../out",
@@ -29,7 +29,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' tauri: asset: http://localhost:3000 ipc: https://ipc.localhost; img-src 'self' asset: data: http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://restapi.amap.com; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost ws://localhost:3000 http://localhost:3000 https: https://restapi.amap.com tauri:; frame-src 'self' https: http: data:; child-src 'self' https: http: data: blob:; object-src 'self' https: http: data:;",
+      "csp": "default-src 'self' tauri: asset: http://localhost:3000 ipc: https://ipc.localhost; img-src 'self' asset: data: http: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://restapi.amap.com; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost ws://localhost:3000 http://localhost:3000 https: https://restapi.amap.com tauri: blob:; frame-src 'self' https: http: data: blob:; child-src 'self' https: http: data: blob:; object-src 'self' https: http: data: blob:; media-src 'self' https: http: data: blob:; font-src 'self' https: http: data:;",
       "capabilities": [
         "main-capability",
         "http-capability",
@@ -62,6 +62,6 @@
     "publisher": "呈尚策划",
     "category": "Productivity",
     "shortDescription": "呈尚策划专业工具集合",
-    "longDescription": "集成22个专业工具的桌面应用，服务于运营、美工、销售、人事、客服等不同岗位的工作需求"
+    "longDescription": "集成34个专业工具的桌面应用，服务于运营、美工、销售、人事、客服等不同岗位的工作需求"
   }
 }
