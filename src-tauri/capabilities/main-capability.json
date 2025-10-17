@@ -36,6 +36,36 @@
             "args": [
               {
                 "validator": "https://xuxikai886.github.io/**"
+              },
+              {
+                "validator": "https://www.yujinkeji.xyz/**"
+              },
+              {
+                "validator": "https://www.yujinkeji.me/**"
+              },
+              {
+                "validator": "https://www.yujinkeji.net/**"
+              },
+              {
+                "validator": "https://www.chengshangcehua.top/**"
+              },
+              {
+                "validator": "https://www.csch.site/**"
+              },
+              {
+                "validator": "https://www.csch.top/**"
+              },
+              {
+                "validator": "https://www.csch.asia/**"
+              },
+              {
+                "validator": "https://www.csch.uno/**"
+              },
+              {
+                "validator": "https://**"
+              },
+              {
+                "validator": "http://**"
               }
             ]
           }

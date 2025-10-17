@@ -242,7 +242,7 @@ export const toolsData: Tool[] = [
     color: "from-purple-300 to-purple-400",
     featured: true,
     lastUpdated: "今天",
-    toolType: "web"
+    toolType: "web"  // 在应用内WebView中打开
   },
   {
     id: 35,
@@ -411,7 +411,7 @@ export const toolsData: Tool[] = [
     color: "from-blue-300 to-blue-400",
     featured: true,
     lastUpdated: "今天",
-    toolType: "external"  // 改为external类型，在外部浏览器打开
+    toolType: "web"  // 在应用内WebView中打开
   },
   // 新增第24个工具
   {

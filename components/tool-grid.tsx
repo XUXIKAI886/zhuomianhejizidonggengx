@@ -50,6 +50,7 @@ export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGr
 
   const handleLaunchTool = async (tool: typeof toolsData[0]) => {
     console.log(`🎯 [前端] 用户点击工具: ${tool.name} (ID: ${tool.id})`)
+    console.log(`🎯 [前端] 工具类型: ${tool.toolType}`)
     console.log(`🎯 [前端] 当前用户状态:`, state.user)
 
     // 记录工具点击统计
@@ -86,12 +87,36 @@ export function ToolGrid({ category = "全部工具", searchQuery = "" }: ToolGr
       console.error(`❌ [前端] 用户未登录，无法记录工具点击`)
     }
 
-    // 直接在应用内打开WebView
-    setWebViewModal({
-      isOpen: true,
-      tool: tool
-    })
-    // 移除toast提示，直接打开工具
+    // 检查工具类型，决定打开方式
+    if (tool.toolType === 'external') {
+      // 在外部浏览器中打开
+      console.log(`🌐 [前端] 在外部浏览器中打开: ${tool.url}`)
+      try {
+        // 检测是否在Tauri环境
+        if (typeof window !== 'undefined' && typeof window.__TAURI__ !== 'undefined') {
+          // 使用Tauri shell插件打开URL
+          await window.__TAURI__.core.invoke('plugin:shell|open', {
+            path: tool.url
+          })
+          console.log(`✅ [Tauri] 已在默认浏览器中打开: ${tool.url}`)
+        } else {
+          // Web环境，使用window.open
+          window.open(tool.url, '_blank')
+          console.log(`✅ [Web] 已在新标签页中打开: ${tool.url}`)
+        }
+      } catch (error) {
+        console.error(`❌ 打开外部链接失败:`, error)
+        // 降级到window.open
+        window.open(tool.url, '_blank')
+      }
+    } else {
+      // 在应用内WebView中打开
+      console.log(`📱 [前端] 在应用内WebView中打开: ${tool.url}`)
+      setWebViewModal({
+        isOpen: true,
+        tool: tool
+      })
+    }
   }
 
   const handleCloseWebView = () => {
