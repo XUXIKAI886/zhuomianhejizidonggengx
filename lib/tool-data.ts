@@ -173,7 +173,7 @@ export const toolsData: Tool[] = [
     name: "外卖店铺四件套方案生成系统",
     description: "基于AI的店铺运营方案自动生成",
     category: "运营工具",
-    url: "https://xuxikai886.github.io/sijiantaofanganshengcheng/",
+    url: "https://www.yjkj.asia",
     icon: Sparkles,
     rating: 4.9,
     downloads: "2.8k",
